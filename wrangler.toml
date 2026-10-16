@@ -1,6 +1,9 @@
 name = "foxtation-cloud"
 main = "src/index.ts"
 compatibility_date = "2026-10-01"
+workers_dev = false
+preview_urls = false
+routes = [{ pattern = "foxtation.khaisa.studio", custom_domain = true }]
 
 [vars]
 # Switch to https://sandbox-api.polar.sh while testing with sandbox license keys.

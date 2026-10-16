@@ -1,5 +1,7 @@
 # foxtation-cloud
 
+Live at `https://foxtation.khaisa.studio` (Cloudflare custom domain; workers.dev is off).
+
 Private backend for Foxtation Cloud: checks the Polar license key, then asks Claude Haiku 5.5 to clean up the transcript.
 
 ## API
@@ -23,4 +25,4 @@ Errors: `401 invalid_license`, `400 empty_text / text_too_long`, `502 upstream_e
 Local: copy `.dev.vars.example` to `.dev.vars`, then `npm run dev`.
 
 Sell it as a subscription: Polar revokes the license key when a subscription ends, and the next validation fails.
-The license check is cached for 10 minutes (only on a custom domain; on `workers.dev` the Cache API is a no-op, so every request checks Polar).
+A granted license check is cached for 10 minutes, so most dictations skip the Polar round trip.
