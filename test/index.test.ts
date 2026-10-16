@@ -218,7 +218,7 @@ describe("/v1/license", () => {
     const d = device();
     polarValidate = () => reply(200, {
       status: "granted",
-      display_key: "****-E56FDA",
+      display_key: "****-79A59C",
       expires_at: null,
       limit_activations: 3,
       activation: { id: d.activation, label: "MacBook Pro", created_at: "2026-10-16T16:30:00Z" },
@@ -227,7 +227,7 @@ describe("/v1/license", () => {
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({
       status: "granted",
-      display_key: "****-E56FDA",
+      display_key: "****-79A59C",
       expires_at: null,
       activations: { used: null, limit: 3 },
       this_device: { activation_id: d.activation, label: "MacBook Pro", created_at: "2026-10-16T16:30:00Z" },

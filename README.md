@@ -61,7 +61,7 @@ Always asks Polar (not the 10-minute cache).
 ```json
 {
   "status": "granted",
-  "display_key": "****-E56FDA79A59C",
+  "display_key": "****-79A59C",
   "expires_at": null,
   "activations": { "used": null, "limit": 3 },
   "this_device": { "activation_id": "b85b…", "label": "MacBook Pro", "created_at": "2026-10-16T16:30:00Z" },
