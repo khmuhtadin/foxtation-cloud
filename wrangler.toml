@@ -10,7 +10,17 @@ routes = [{ pattern = "foxtation.khaisa.studio", custom_domain = true }]
 POLAR_API = "https://api.polar.sh"
 # Polar › Settings › General › Organization ID
 POLAR_ORGANIZATION_ID = "98cabd68-171f-4362-bf23-c277be23a276"
+# Cleanups per license key per UTC day
+DAILY_LIMIT = "500"
 # Anthropic Console › Settings › Workspaces › Foxtation (wrkspc_…)
 ANTHROPIC_WORKSPACE_ID = "wrkspc_0178eLUwQhdNzJyRERLWMZWv"
 
 # Secret, set with: npx wrangler secret put ANTHROPIC_API_KEY
+
+[[durable_objects.bindings]]
+name = "USAGE"
+class_name = "Usage"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Usage"]

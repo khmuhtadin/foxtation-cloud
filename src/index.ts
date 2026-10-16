@@ -1,10 +1,13 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { DurableObject } from "cloudflare:workers";
 
 interface Env {
   ANTHROPIC_API_KEY: string;
   ANTHROPIC_WORKSPACE_ID: string;
   POLAR_ORGANIZATION_ID: string;
   POLAR_API: string;
+  DAILY_LIMIT: string;
+  USAGE: DurableObjectNamespace<Usage>;
 }
 
 const MODEL = "claude-haiku-5-5";
@@ -28,12 +31,15 @@ export default {
     if (request.method !== "POST") return json({ error: "not_found" }, 404);
 
     const key = (request.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "").trim();
-    if (!key || !(await licenseIsValid(key, env, ctx))) {
+    if (!key) return json({ error: "invalid_license" }, 401);
+
+    if (url.pathname === "/v1/activate") return activate(key, request, env);
+    if (url.pathname !== "/v1/cleanup") return json({ error: "not_found" }, 404);
+
+    const activation = request.headers.get("x-foxtation-activation") ?? "";
+    if (!activation || !(await licenseIsValid(key, activation, env, ctx))) {
       return json({ error: "invalid_license" }, 401);
     }
-
-    if (url.pathname === "/v1/license") return json({ ok: true });
-    if (url.pathname !== "/v1/cleanup") return json({ error: "not_found" }, 404);
 
     const body = (await request.json().catch(() => null)) as
       | { text?: string; language?: string; app?: string }
@@ -41,6 +47,12 @@ export default {
     const text = body?.text?.trim() ?? "";
     if (!text) return json({ error: "empty_text" }, 400);
     if (text.length > 20000) return json({ error: "text_too_long" }, 400);
+
+    const usage = env.USAGE.get(env.USAGE.idFromName(await sha256(key)));
+    const today = new Date().toISOString().slice(0, 10);
+    if (!(await usage.take(today, Number(env.DAILY_LIMIT)))) {
+      return json({ error: "daily_limit" }, 429);
+    }
 
     const client = new Anthropic({
       apiKey: env.ANTHROPIC_API_KEY,
@@ -75,16 +87,36 @@ export default {
   },
 };
 
-// Polar answers 200 for a granted key and 404 for a missing, revoked or expired one.
+// Registers this Mac as one of the key's devices. Polar refuses with 403 once the
+// benefit's activation limit is reached (and for a revoked or expired key).
+async function activate(key: string, request: Request, env: Env): Promise<Response> {
+  const body = (await request.json().catch(() => null)) as { label?: string } | null;
+  const response = await fetch(`${env.POLAR_API}/v1/customer-portal/license-keys/activate`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      key,
+      organization_id: env.POLAR_ORGANIZATION_ID,
+      label: body?.label || "Mac",
+    }),
+  });
+  if (response.status === 403) return json({ error: "activation_limit" }, 403);
+  if (!response.ok) return json({ error: "invalid_license" }, 401);
+  const activation = (await response.json()) as { id: string };
+  return json({ activation_id: activation.id });
+}
+
+// Polar answers 200 for a granted key on a known device, 404 otherwise
+// (missing, revoked or expired key, or a deactivated device).
 // A good answer is cached for 10 minutes so most dictations skip the round trip.
-async function licenseIsValid(key: string, env: Env, ctx: ExecutionContext): Promise<boolean> {
-  const cacheKey = new Request(`https://license.foxtation/${await sha256(key)}`);
+async function licenseIsValid(key: string, activation: string, env: Env, ctx: ExecutionContext): Promise<boolean> {
+  const cacheKey = new Request(`https://license.foxtation/${await sha256(key + activation)}`);
   if (await caches.default.match(cacheKey)) return true;
 
   const response = await fetch(`${env.POLAR_API}/v1/customer-portal/license-keys/validate`, {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ key, organization_id: env.POLAR_ORGANIZATION_ID }),
+    body: JSON.stringify({ key, activation_id: activation, organization_id: env.POLAR_ORGANIZATION_ID }),
   });
   if (!response.ok) return false;
 
@@ -92,6 +124,18 @@ async function licenseIsValid(key: string, env: Env, ctx: ExecutionContext): Pro
     headers: { "cache-control": "max-age=600" },
   })));
   return true;
+}
+
+// One counter per license key. A Durable Object handles one request at a time,
+// so two Macs dictating at once can't both slip past the limit.
+export class Usage extends DurableObject {
+  async take(day: string, limit: number): Promise<boolean> {
+    const usage = await this.ctx.storage.get<{ day: string; count: number }>("usage");
+    const count = usage?.day === day ? usage.count : 0;
+    if (count >= limit) return false;
+    await this.ctx.storage.put("usage", { day, count: count + 1 });
+    return true;
+  }
 }
 
 async function sha256(value: string): Promise<string> {
