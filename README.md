@@ -94,7 +94,7 @@ Frees this Mac's activation in Polar and drops the cached license check. `404 no
 | 404 | `not_found` | unknown path, or `/v1/deactivate` for an unknown activation |
 | 429 | `daily_limit` | the key used `DAILY_LIMIT` cleanups today (UTC); reply includes `usage` |
 | 502 | `upstream_error`, `refused`, `empty_result` | Claude failed, declined, or returned no text |
-| 503 | `busy` | Claude rate limit |
+| 503 | `busy` | Claude or Polar rate-limited the request; try again |
 
 ## What the app must do itself
 

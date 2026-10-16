@@ -31,7 +31,7 @@ Rules:
 - When the speaker clearly dictates a list or steps, format them as a list. Otherwise keep plain prose. (Not in the literal style.)
 - When a word in the transcript sounds like a term in <vocabulary>, use that term's exact spelling and casing. Never insert vocabulary terms that weren't spoken.
 - When the speaker says a phrase from <snippet_cues>, keep it verbatim: same words, same order, not translated or reformatted. The app replaces it afterwards.
-- When <spoken_emoji> is true, spoken emoji names ("emoji ketawa", "thumbs up emoji") become the emoji character.
+- When <spoken_emoji> is true, a spoken emoji name becomes the emoji character itself: "emoji ketawa" → 😂, "emoji senyum" → 🙂, "emoji sedih" → 😢, "emoji hati" or "emoji love" → ❤️, "thumbs up emoji" or "emoji jempol" → 👍, "emoji api" → 🔥. Drop the word "emoji" too. When <spoken_emoji> is absent, keep those words as spoken.
 
 Style:
 - When <style> is given, follow it; it wins over the target app.
@@ -83,9 +83,9 @@ export default {
     if (url.pathname !== "/v1/cleanup" && url.pathname !== "/v1/usage") {
       return json({ error: "not_found" }, 404);
     }
-    if (!(await licenseIsValid(key, activation, env, ctx))) {
-      return json({ error: "invalid_license" }, 401);
-    }
+    const check = await licenseIsValid(key, activation, env, ctx);
+    if (check === "busy") return json({ error: "busy" }, 503);
+    if (check === "invalid") return json({ error: "invalid_license" }, 401);
 
     const usage = env.USAGE.get(env.USAGE.idFromName(await sha256(key)));
     const today = new Date().toISOString().slice(0, 10);
@@ -275,6 +275,7 @@ async function activate(key: string, request: Request, env: Env): Promise<Respon
   const body = (await request.json().catch(() => null)) as { label?: unknown } | null;
   const label = typeof body?.label === "string" ? body.label.trim().slice(0, 100) : "";
   const response = await polar(env, "activate", { key, label: label || "Mac" });
+  if (response.status === 429) return json({ error: "busy" }, 503);
   if (response.status === 403) return json({ error: "activation_limit" }, 403);
   if (!response.ok) return json({ error: "invalid_license" }, 401);
   const activation = (await response.json()) as { id: string };
@@ -284,17 +285,21 @@ async function activate(key: string, request: Request, env: Env): Promise<Respon
 // Polar answers 200 for a granted key on a known device, 404 otherwise
 // (missing, revoked or expired key, or a deactivated device).
 // A good answer is cached for 10 minutes so most dictations skip the round trip.
-async function licenseIsValid(key: string, activation: string, env: Env, ctx: ExecutionContext): Promise<boolean> {
+// "busy" when Polar rate-limits us: the license may be fine, so don't call it invalid.
+async function licenseIsValid(
+  key: string, activation: string, env: Env, ctx: ExecutionContext,
+): Promise<"ok" | "invalid" | "busy"> {
   const cacheKey = await licenseCacheKey(key, activation);
-  if (await caches.default.match(cacheKey)) return true;
+  if (await caches.default.match(cacheKey)) return "ok";
 
   const response = await polar(env, "validate", { key, activation_id: activation });
-  if (!response.ok) return false;
+  if (response.status === 429) return "busy";
+  if (!response.ok) return "invalid";
 
   ctx.waitUntil(caches.default.put(cacheKey, new Response("ok", {
     headers: { "cache-control": "max-age=600" },
   })));
-  return true;
+  return "ok";
 }
 
 // Always asks Polar, never the cache: this is what the License screen shows.
@@ -302,6 +307,7 @@ async function licenseIsValid(key: string, activation: string, env: Env, ctx: Ex
 // `activations.used` is null.
 async function license(key: string, activation: string, env: Env): Promise<Response> {
   const response = await polar(env, "validate", { key, activation_id: activation });
+  if (response.status === 429) return json({ error: "busy" }, 503);
   if (!response.ok) return json({ error: "invalid_license" }, 401);
   const data = (await response.json()) as {
     status?: string; display_key?: string; expires_at?: string | null; limit_activations?: number | null;
@@ -324,7 +330,11 @@ async function license(key: string, activation: string, env: Env): Promise<Respo
 async function deactivate(key: string, activation: string, env: Env): Promise<Response> {
   const response = await polar(env, "deactivate", { key, activation_id: activation });
   if (response.status === 404) return json({ error: "not_found" }, 404);
-  if (response.status !== 204) return json({ error: "upstream_error" }, 502);
+  if (response.status === 429) return json({ error: "busy" }, 503);
+  if (response.status !== 204) {
+    console.error("polar deactivate", response.status, await response.text());
+    return json({ error: "upstream_error" }, 502);
+  }
   await caches.default.delete(await licenseCacheKey(key, activation));
   return new Response(null, { status: 204 });
 }

@@ -213,6 +213,23 @@ describe("/v1/cleanup", () => {
   });
 });
 
+describe("Polar rate limits", () => {
+  it("answer busy, not invalid_license", async () => {
+    polarValidate = () => reply(429, { error: "TooManyRequests" });
+    const cleanup = await post("/v1/cleanup", device(), { text: "halo" });
+    expect(cleanup.status).toBe(503);
+    expect(await cleanup.json()).toEqual({ error: "busy" });
+    expect((await post("/v1/license", device())).status).toBe(503);
+  });
+
+  it("on deactivate too", async () => {
+    polarDeactivate = () => reply(429, { error: "TooManyRequests" });
+    const response = await post("/v1/deactivate", device());
+    expect(response.status).toBe(503);
+    expect(await response.json()).toEqual({ error: "busy" });
+  });
+});
+
 describe("/v1/license", () => {
   it("maps Polar's fields", async () => {
     const d = device();
