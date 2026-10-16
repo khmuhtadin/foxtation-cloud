@@ -5,14 +5,17 @@
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
-    "check": "tsc --noEmit"
+    "check": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.135.0"
   },
   "devDependencies": {
+    "@cloudflare/vitest-plugin": "^1.4.4",
     "@cloudflare/workers-types": "^5.20261016.1",
     "typescript": "^7.0.2",
+    "vitest": "^4.1.12",
     "wrangler": "^4.151.1"
   }
 }
