@@ -18,7 +18,7 @@ Errors: `401 invalid_license`, `400 empty_text / text_too_long`, `502 upstream_e
 ## Setup
 
 1. Polar: create the product with a **License key** benefit. Copy the Organization ID into `wrangler.toml`.
-2. Secret: `npx wrangler secret put ANTHROPIC_API_KEY`
+2. Anthropic: put the workspace ID in `wrangler.toml`, then `npx wrangler secret put ANTHROPIC_API_KEY`
 3. Deploy: `npm run deploy`
 4. Put the deployed URL into `CloudCleanup.server` in the app (`Sources/Foxtation/CloudCleanup.swift`).
 

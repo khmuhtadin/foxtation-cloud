@@ -2,6 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 
 interface Env {
   ANTHROPIC_API_KEY: string;
+  ANTHROPIC_WORKSPACE_ID: string;
   POLAR_ORGANIZATION_ID: string;
   POLAR_API: string;
 }
@@ -41,7 +42,10 @@ export default {
     if (!text) return json({ error: "empty_text" }, 400);
     if (text.length > 20000) return json({ error: "text_too_long" }, 400);
 
-    const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
+    const client = new Anthropic({
+      apiKey: env.ANTHROPIC_API_KEY,
+      defaultHeaders: { "anthropic-workspace-id": env.ANTHROPIC_WORKSPACE_ID },
+    });
     let message: Anthropic.Message;
     try {
       message = await client.messages.create({
@@ -55,6 +59,7 @@ export default {
         }],
       });
     } catch (error) {
+      console.error("anthropic", error instanceof Anthropic.APIError ? `${error.status} ${error.message}` : error);
       if (error instanceof Anthropic.RateLimitError) return json({ error: "busy" }, 503);
       if (error instanceof Anthropic.APIError) return json({ error: "upstream_error" }, 502);
       throw error;
