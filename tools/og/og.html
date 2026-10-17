@@ -1,0 +1,28 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+@font-face { font-family: "DM Sans"; src: url(../../site/assets/fonts/dm-sans.woff2) format("woff2"); font-weight: 400 800; }
+@font-face { font-family: "Fraunces"; src: url(../../site/assets/fonts/fraunces-italic.woff2) format("woff2"); font-style: italic; font-weight: 500 800; }
+@font-face { font-family: "DM Mono"; src: url(../../site/assets/fonts/dm-mono-500.woff2) format("woff2"); font-weight: 500; }
+html, body { margin: 0; width: 1200px; height: 630px; overflow: hidden; }
+body { background: #F5F7FF; color: #151A33; font-family: "DM Sans"; position: relative; }
+.blob { position: absolute; border-radius: 50%; }
+.a { width: 300px; height: 300px; background: #FFD66B; opacity: .55; right: -80px; top: -90px; }
+.b { width: 360px; height: 360px; background: #C9D0FF; opacity: .6; left: -140px; bottom: -170px; }
+.wrap { position: absolute; inset: 0; padding: 72px 80px; display: flex; flex-direction: column; }
+.brand { display: flex; align-items: center; gap: 14px; font-weight: 800; font-size: 30px; letter-spacing: -0.02em; }
+.brand img { width: 52px; height: 52px; border-radius: 12px; }
+h1 { margin: 52px 0 0; font-weight: 800; font-size: 80px; line-height: 1.02; letter-spacing: -0.045em; max-width: 1000px; }
+.two { font-family: "Fraunces"; font-style: italic; font-weight: 700; color: #4A56E2; background: #FFD66B; padding: 0 14px; border-radius: 18px; }
+.sub { margin-top: 18px; font-family: "Fraunces"; font-style: italic; font-weight: 600; font-size: 44px; color: #4A56E2; }
+.row { margin-top: auto; display: flex; gap: 10px; align-items: center; }
+.key { font-family: "DM Mono"; font-size: 22px; padding: 10px 18px; border: 2px solid #151A33; border-bottom-width: 6px; border-radius: 14px; background: #fff; margin-right: 10px; }
+.pill { font-size: 22px; font-weight: 600; padding: 10px 18px; border-radius: 999px; background: #fff; border: 1px solid #DDE2FB; }
+.pill.l { background: #E6EAFF; border-color: transparent; } .pill.c { background: #FFF3CF; border-color: transparent; }
+</style></head><body>
+<div class="blob a"></div><div class="blob b"></div>
+<div class="wrap">
+  <div class="brand"><img src="../../site/assets/favicon.png" alt=""><span>foxtation</span></div>
+  <h1>Speak your language, or <span class="two">two</span> in one sentence.</h1>
+  <div class="sub">Your Mac types it.</div>
+  <div class="row"><span class="key">⌥ option</span><span class="pill">English</span><span class="pill l">Deutsch</span><span class="pill c">日本語</span><span class="pill">Français</span><span class="pill l">Bahasa Indonesia</span><span class="pill">+19</span></div>
+</div>
+</body></html>
