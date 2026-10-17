@@ -158,9 +158,11 @@ async function transcribe(
   const started = Date.now();
   let used = engine;
   let heard = await listen(env, engine, audio, hint);
-  if (!heard && engine === "scribe") {
-    used = "groq";  // Scribe is down or refused: Groq still gets the words
-    heard = await listen(env, "groq", audio, hint);
+  // Scribe down, refusing, or now and then hearing nothing in a stretch the app
+  // already found speech in: Groq still gets the words.
+  if ((!heard || !heard.text) && engine === "scribe") {
+    used = "groq";
+    heard = (await listen(env, "groq", audio, hint)) ?? heard;
   }
   if (!heard) return json({ error: "upstream_error" }, 502);
   // A guess outside the person's languages (Indonesian heard as Tagalog) is

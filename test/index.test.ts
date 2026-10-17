@@ -383,6 +383,12 @@ describe("/v1/transcribe", () => {
     expect(data.text).toBe("so the meeting is at four");
   });
 
+  it("asks Groq when Scribe hears nothing", async () => {
+    scribe = () => reply(200, { text: "", language_code: "eng" });
+    const data = (await (await sendAudio(device(), wav(5))).json()) as any;
+    expect(data).toEqual({ text: "so the meeting is at four", language: "en", engine: "groq" });
+  });
+
   it("sends a guess outside your languages again in your first one", async () => {
     let n = 0;
     scribe = (form) => {
