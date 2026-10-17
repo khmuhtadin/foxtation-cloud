@@ -5,6 +5,10 @@ workers_dev = false
 preview_urls = false
 routes = [{ pattern = "foxtation.khaisa.studio", custom_domain = true }]
 
+# The landing page. A GET that matches a file in site/ is served from there;
+# everything else, including every /v1/* request, falls through to the Worker.
+assets = { directory = "./site" }
+
 [vars]
 # Switch to https://sandbox-api.polar.sh while testing with sandbox license keys.
 POLAR_API = "https://api.polar.sh"

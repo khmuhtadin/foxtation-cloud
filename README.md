@@ -4,6 +4,8 @@ Live at `https://foxtation.khaisa.studio` (Cloudflare custom domain; workers.dev
 
 Private backend for Foxtation Cloud: checks the Polar license key, then asks Claude Haiku 5.5 to clean up the transcript.
 
+The public landing page is plain HTML and CSS in `site/`, served as Workers static assets: a GET that matches a file there is answered from it, and everything else (all of `/v1/*`) reaches the Worker. Preview with `npx wrangler dev`.
+
 ## API
 
 All requests are `POST` with `Authorization: Bearer <license key>`. Every endpoint except `/v1/activate` also needs `X-Foxtation-Activation: <activation id>`. Errors are `{"error": "<code>"}`.

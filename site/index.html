@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Foxtation — voice dictation for Mac in Indonesian and English</title>
+<meta name="description" content="Hold right Option, speak, let go. On-device Whisper types Indonesian, English, or both in one sentence into any Mac app, about half a second after you release. Free and open source.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#DCE7F8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#151A33" media="(prefers-color-scheme: dark)">
+<link rel="canonical" href="https://foxtation.khaisa.studio/">
+<link rel="icon" type="image/png" href="/assets/favicon.png">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://foxtation.khaisa.studio/">
+<meta property="og:title" content="Foxtation — voice dictation for Mac in Indonesian and English">
+<meta property="og:description" content="Hold right Option, speak, let go. On-device Whisper types Indonesian, English, or both in one sentence into any Mac app.">
+<meta property="og:image" content="https://foxtation.khaisa.studio/assets/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="/assets/site.css">
+<script src="/assets/demo.js" defer></script>
+</head>
+<body>
+
+<header class="masthead wrap">
+  <a class="brand" href="/">
+    <img src="/assets/favicon.png" width="28" height="28" alt="">
+    <span class="name">Foxtation</span>
+  </a>
+  <nav aria-label="Main">
+    <a class="hide-sm" href="#pro">Pro</a>
+    <a class="hide-sm" href="#install">Install</a>
+    <a class="hide-sm" href="https://github.com/khmuhtadin/foxtation">GitHub</a>
+    <a class="button small" href="https://github.com/khmuhtadin/foxtation/releases/latest">Download</a>
+  </nav>
+</header>
+
+<main>
+
+<section class="hero wrap">
+  <h1>Speak Indonesian, English, or both in one sentence. Your Mac types it.</h1>
+
+  <div class="hero-body">
+    <div class="lede">
+      <p>Hold <kbd>right ⌥</kbd> anywhere, say it, let go. The text lands in whatever app you’re in: Slack, Mail, Cursor, Notes, a terminal. Whisper runs on your Mac, so your voice never leaves it.</p>
+      <div class="actions">
+        <a class="button" href="https://github.com/khmuhtadin/foxtation/releases/latest">Download for Mac</a>
+        <a class="quiet" href="#install">or install with Homebrew</a>
+      </div>
+      <p class="fine">Free and open source. macOS 14 or later, Apple silicon.</p>
+    </div>
+
+    <figure class="demo" aria-label="Dictation replay">
+      <div class="screen">
+        <div class="message">
+          <span class="to" id="demo-app">Slack · #ops</span>
+          <p class="typed" id="demo-typed" aria-live="polite">Jadi besok meeting jam 4, di kantor ya.</p>
+        </div>
+        <div class="pill" id="demo-pill" data-state="pasted">
+          <img src="/assets/fox.webp" width="28" height="28" alt="">
+          <span class="pill-label" id="demo-label">Pasted</span>
+          <span class="pill-meta" id="demo-meta">· 8 words</span>
+          <span class="bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+        </div>
+      </div>
+      <figcaption>
+        <span class="tag">Heard</span>
+        <span class="heard" id="demo-heard"><del>eh</del> jadi besok meeting <del>jam tiga, eh maksudnya</del> jam empat, di kantor ya</span>
+      </figcaption>
+      <button class="hold" id="demo-hold" type="button">Press and hold to replay<span class="hide-touch">, or hold <kbd>right ⌥</kbd></span></button>
+      <p class="note">A replay, nothing is recorded. The crossed-out words are removed by Pro cleanup; without Pro you get Whisper’s transcript word for word.</p>
+    </figure>
+  </div>
+</section>
+
+<section class="part wrap" id="languages">
+  <h2 class="margin">Languages</h2>
+  <div class="body">
+    <p class="big">It never makes you pick a language.</p>
+    <p>Dictation usually asks which language you’ll speak, then stumbles over the other one. Here a Slack message that starts in Indonesian and ends in English comes out exactly that way. Nothing is translated, and <em>meeting</em>, <em>deploy</em> and <em>merge</em> stay in English because that’s how you said them.</p>
+  </div>
+  <figure class="shot wide">
+    <picture>
+      <source srcset="/assets/home-dark.webp" media="(prefers-color-scheme: dark)">
+      <img src="/assets/home.webp" width="1046" height="570" loading="lazy" decoding="async" alt="The app's Home screen listing today's dictations: an Indonesian Slack message, an English email, a Cursor prompt, a mixed Indonesian–English note and a WhatsApp reply.">
+    </picture>
+    <figcaption>One day of dictation: Slack in Indonesian, Mail in English, a note in both.</figcaption>
+  </figure>
+</section>
+
+<section class="part wrap" id="speed">
+  <h2 class="margin">Speed and privacy</h2>
+  <div class="body split">
+    <p class="number">0.5<span>s</span></p>
+    <div>
+      <p class="big">From letting go of the key to text in the field.</p>
+      <p>Whisper large-v3-turbo runs on the Apple Neural Engine and transcribes while you’re still talking, so when you release there’s almost nothing left to do. Measured on an M4. It used to take about three seconds.</p>
+      <p>The audio is processed on your Mac and stays there. So does your history.</p>
+    </div>
+  </div>
+</section>
+
+<section class="part wrap" id="pro">
+  <h2 class="margin">Pro</h2>
+  <div class="body">
+    <p class="big">Foxtation Pro writes down what you meant, not every <del>eh</del>.</p>
+    <p>On-device transcription keeps every <del>um</del>, every <del>anu</del> and every <del>no wait</del>. Pro sends the text, never the audio, to a cleanup model that removes the fillers, applies your self-corrections, fixes punctuation and spells your dictionary words the way you wrote them. The text isn’t stored.</p>
+
+    <h3>And it writes in the tone each app calls for</h3>
+    <ul class="tones">
+      <li><span class="tone">Santai</span><span class="for">casual, for chat</span><q>oke gw otw ya, 10 menit lagi sampe</q></li>
+      <li><span class="tone">Netral</span><span class="for">neutral, wording untouched</span><q>Oke, gw otw ya. 10 menit lagi sampe.</q></li>
+      <li><span class="tone">Rapi</span><span class="for">polished, for email</span><q>Oke, saya sedang di jalan. Sekitar 10 menit lagi sampai.</q></li>
+      <li><span class="tone">Literal</span><span class="for">code and terminals</span><q class="mono">git commit</q></li>
+    </ul>
+
+    <dl class="facts">
+      <div><dt>Clean dictations skip the cloud</dt><dd>When there’s nothing to fix, the text pastes instantly.</dd></div>
+      <div><dt>It never blocks you</dt><dd>If cleanup can’t run, the raw transcript is pasted.</dd></div>
+      <div><dt>500 cleanups a day</dt><dd>On up to 3 Macs.</dd></div>
+    </dl>
+
+    <div class="buy">
+      <a class="button" href="https://buy.polar.sh/polar_cl_pGAbwRd3v6HXPARELwKUmTJlleM9LQDteqWRq41Bn7C">Get Pro, $7/month</a>
+      <p class="fine">Billed through Polar. <a href="https://polar.sh/khaisa-studios/portal">Manage your subscription</a>.<br>Without Pro, dictation stays free, open source and fully on-device.</p>
+    </div>
+  </div>
+</section>
+
+<section class="part wrap" id="details">
+  <h2 class="margin">Details</h2>
+  <div class="body">
+    <dl class="list">
+      <div><dt>Dictionary</dt><dd>Teach it names and terms once, plus replacements: <code>btw</code> → <code>by the way</code>.</dd></div>
+      <div><dt>Snippets</dt><dd>Say a cue mid-sentence and get the whole text: “my email” pastes your email address.</dd></div>
+      <div><dt>History</dt><dd>Every dictation, kept on this Mac and nowhere else.</dd></div>
+      <div><dt>Insights</dt><dd>Your speaking speed against your typing, the time saved, and your streak.</dd></div>
+    </dl>
+    <figure class="shot">
+      <picture>
+        <source srcset="/assets/dictionary-dark.webp" media="(prefers-color-scheme: dark)">
+        <img src="/assets/dictionary.webp" width="780" height="680" loading="lazy" decoding="async" alt="The Dictionary screen with names, company and product terms, and two replacements: gimana to bagaimana in email only, btw to by the way in all apps.">
+      </picture>
+    </figure>
+  </div>
+</section>
+
+<section class="part wrap" id="install">
+  <h2 class="margin">Install</h2>
+  <div class="body">
+    <ol class="steps">
+      <li>
+        <p><a href="https://github.com/khmuhtadin/foxtation/releases/latest">Download the DMG</a> and drag the app to Applications. Or use Homebrew:</p>
+        <div class="code"><code>brew install --cask khmuhtadin/tap/foxtation</code><button type="button" class="copy">Copy</button></div>
+      </li>
+      <li>
+        <p>The app isn’t notarized yet, so the first time, right-click it and choose Open. Or clear the quarantine flag:</p>
+        <div class="code"><code>xattr -dr com.apple.quarantine /Applications/Foxtation.app</code><button type="button" class="copy">Copy</button></div>
+      </li>
+      <li>
+        <p>On first run it downloads the 1.5&nbsp;GB speech model and prepares it. That takes about a minute, once.</p>
+      </li>
+    </ol>
+    <p class="fine">Needs macOS 14 or later on Apple silicon.</p>
+  </div>
+</section>
+
+</main>
+
+<footer class="wrap">
+  <img src="/assets/fox.webp" width="40" height="40" alt="">
+  <p>Made in Indonesia by Khairul Muhtadin at Khaisa Studio. Free and open source under the MIT license.</p>
+  <p class="links"><a href="https://github.com/khmuhtadin/foxtation">Source on GitHub</a> <a href="https://github.com/khmuhtadin/foxtation/releases/latest">Releases</a> <a href="https://polar.sh/khaisa-studios/portal">Manage subscription</a></p>
+</footer>
+
+</body>
+</html>
