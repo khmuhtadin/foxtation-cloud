@@ -13,6 +13,7 @@ All requests are `POST` with `Authorization: Bearer <license key>`. Every endpoi
 | Path | Body | Reply |
 |---|---|---|
 | `/v1/activate` | `{"label"}` | `{"activation_id"}` |
+| `/v1/transcribe` | a WAV, see below | `{"text", "language", "engine"}` |
 | `/v1/cleanup` | see below | `{"text", "changes", "usage"}` |
 | `/v1/usage` | — | `{"used", "limit", "resets_at"}` |
 | `/v1/license` | — | see below |
@@ -55,6 +56,12 @@ Reply:
 ```
 
 `usage` is included when the counter answers in time (it almost always does); otherwise it's left out and the count still happens. `changes` are estimated on the server by comparing the raw and cleaned text (filler words gone, correction phrases gone, punctuation and casing changes), for display only (Insights). Cleanup itself returns plain text, which is faster than structured output. A `429 daily_limit` reply also carries `usage`. A cleanup that fails on Claude's side (`busy`, `upstream_error`, `refused`, `empty_result`) is refunded, so it doesn't count against the day.
+
+### `/v1/transcribe`
+
+Pro dictation without the on-device model. The body is one stretch of speech as a 16 kHz 16-bit mono WAV (`Content-Type: audio/wav`, up to ~60 s; the app sends ≤ 25 s while you talk). Query: `languages=id,en` (what the person speaks) and `language=auto` or a pinned code.
+
+The first `SCRIBE_SECONDS` of speech per key per UTC day go to ElevenLabs Scribe v2, the rest to Groq's Whisper large-v3, up to `AUDIO_SECONDS` (then `429 daily_limit`). Seconds come from the WAV header. With one language (or a pinned one) it's passed to the provider; otherwise a detected language outside `languages` is sent again in the first one. Scribe failing or hearing nothing falls back to Groq. The counter never holds up the reply: "Scribe hour used" and "cap reached" are remembered in the cache, so at most one stretch slips past each. `engine` says which provider answered.
 
 ### `/v1/license`
 
@@ -102,22 +109,23 @@ Frees this Mac's activation in Polar and drops the cached license check. `404 no
 
 - **Deterministic replacements** (`btw → by the way`, scoped per app): applied in the app after cleanup. The backend never sees them.
 - **Snippet expansion**: the backend only keeps cues verbatim; the app swaps each cue for its saved text after cleanup.
-- **History and audio**: stay on the Mac. The backend stores nothing but a per-key daily counter.
+- **History**: stays on the Mac. The backend stores nothing but per-key daily counters. With cloud transcription, audio passes through to ElevenLabs or Groq and isn't kept here.
 - **Fallback**: on any error (limit, license, network, 5xx), paste the raw on-device transcript.
 
 ## Limits
 
-Each Mac activates once and counts against the benefit's **activation limit** in Polar. Each key gets `DAILY_LIMIT` cleanups per UTC day, counted in a Durable Object. A granted license check is cached for an hour, so dictations skip the Polar round trip.
+Each Mac activates once and counts against the benefit's **activation limit** in Polar. Each key gets `DAILY_LIMIT` cleanups and `AUDIO_SECONDS` of cloud transcription (the first `SCRIBE_SECONDS` on Scribe) per UTC day, counted in a Durable Object. A granted license check is cached for an hour, so dictations skip the Polar round trip.
 
 ## Setup
 
 1. Polar: create the product with a **License key** benefit with an activation limit set (activation fails without one). Copy the Organization ID into `wrangler.toml`.
 2. Anthropic: put the workspace ID in `wrangler.toml`, then `npx wrangler secret put ANTHROPIC_API_KEY`
-3. Deploy: `npm run deploy`
-4. Put the deployed URL into `CloudCleanup.server` in the app (`Sources/Foxtation/CloudCleanup.swift`).
+3. Speech: `npx wrangler secret put ELEVENLABS_API_KEY` and `npx wrangler secret put GROQ_API_KEY` (paid plans for production: ElevenLabs for commercial use, Groq's Developer tier for rate limits).
+4. Deploy: `npm run deploy`
+5. Put the deployed URL into `CloudCleanup.server` in the app (`Sources/Foxtation/CloudCleanup.swift`).
 
 Local: copy `.dev.vars.example` to `.dev.vars`, then `npm run dev`.
 
-Tests: `npm test` (Vitest in the Workers runtime via `@cloudflare/vitest-plugin`; Polar and Anthropic are faked by stubbing `fetch`). Types: `npm run check`. After changing `wrangler.toml`, rerun `npx wrangler types --include-runtime=false`.
+Tests: `npm test` (Vitest in the Workers runtime via `@cloudflare/vitest-plugin`; Polar, Anthropic, ElevenLabs and Groq are faked by stubbing `fetch`). Types: `npm run check`. After changing `wrangler.toml`, rerun `npx wrangler types --include-runtime=false`.
 
 Sell it as a subscription: Polar revokes the license key when a subscription ends, and the next validation fails.
