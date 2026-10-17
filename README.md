@@ -4,7 +4,7 @@ Live at `https://foxtation.khaisa.studio` (Cloudflare custom domain; workers.dev
 
 Private backend for Foxtation Cloud: checks the Polar license key, then asks Claude Haiku 5.5 to clean up the transcript.
 
-The public landing page is plain HTML and CSS in `site/`, served as Workers static assets: a GET that matches a file there is answered from it, and everything else (all of `/v1/*`) reaches the Worker. Preview with `npx wrangler dev`.
+The public landing page is plain HTML and CSS in `site/`, served as Workers static assets: a request that matches a file there is answered from it, and a browser asking for a page that doesn't exist gets `site/404.html`. `/v1/*` always runs the Worker first (`run_worker_first`), so the API answers with JSON no matter what. Preview with `npx wrangler dev`.
 
 ## API
 

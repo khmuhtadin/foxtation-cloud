@@ -4,6 +4,7 @@ const examples = [
   {
     app: "Slack · #ops",
     target: "Slack",
+    lang: "id",
     heard: "eh jadi besok meeting jam tiga, eh maksudnya jam empat, di kantor ya",
     cut: [0, 4, 5, 6, 7],
     typed: "Jadi besok meeting jam 4, di kantor ya.",
@@ -11,6 +12,7 @@ const examples = [
   {
     app: "Mail · Re: launch",
     target: "Mail",
+    lang: "en",
     heard: "um so I think we should uh ship it on monday, no wait, tuesday",
     cut: [0, 6, 10, 11, 12],
     typed: "So I think we should ship it on Tuesday.",
@@ -29,22 +31,44 @@ let next = 1;
 let state = "pasted";
 let example, words, shown, started, timer;
 
+// Lays out every word up front, hidden, so the caption keeps its height while
+// words appear. Runs of cut words share one <del> so the strike is unbroken.
+function layOutHeard() {
+  heard.textContent = "";
+  heard.removeAttribute("data-cut");
+  heard.lang = example.lang;
+  const spans = [];
+  let del = null;
+  example.heard.split(" ").forEach((word, i) => {
+    const cut = example.cut.includes(i);
+    if (!cut) del = null;
+    if (i) (del ?? heard).append(" ");
+    if (cut && !del) del = heard.appendChild(document.createElement("del"));
+    const span = document.createElement("span");
+    span.textContent = word;
+    span.style.visibility = "hidden";
+    (del ?? heard).append(span);
+    spans.push(span);
+  });
+  return spans;
+}
+
 function start() {
   if (state !== "pasted") return;
   state = "listening";
   example = examples[next];
   next = (next + 1) % examples.length;
-  words = example.heard.split(" ");
+  words = layOutHeard();
   shown = 0;
   started = Date.now();
 
   $("demo-app").textContent = example.app;
   typed.textContent = "";
-  heard.textContent = "";
+  typed.lang = example.lang;
   pill.dataset.state = "listening";
   label.textContent = "Listening";
   meta.textContent = "0:00";
-  hold.setAttribute("aria-pressed", "true");
+  hold.dataset.held = "";
   timer = setInterval(tick, 100);
 }
 
@@ -53,8 +77,7 @@ function tick() {
   meta.textContent = "0:" + String(seconds).padStart(2, "0");
   // A word about every quarter second, like someone talking.
   while (shown < words.length && shown < (Date.now() - started) / 260) {
-    heard.textContent += (shown ? " " : "") + words[shown];
-    shown++;
+    words[shown++].style.visibility = "";
   }
 }
 
@@ -62,17 +85,15 @@ function stop() {
   if (state !== "listening") return;
   state = "cleaning";
   clearInterval(timer);
-  hold.setAttribute("aria-pressed", "false");
+  delete hold.dataset.held;
   // Let go early and the replay still finishes the sentence.
-  heard.textContent = words.join(" ");
+  for (const word of words) word.style.visibility = "";
   pill.dataset.state = "cleaning";
   label.textContent = "Cleaning up for";
   meta.textContent = example.target;
 
   setTimeout(() => {
-    heard.innerHTML = words
-      .map((word, i) => (example.cut.includes(i) ? "<del>" + word + "</del>" : word))
-      .join(" ");
+    heard.dataset.cut = "";
     typed.textContent = example.typed;
     pill.dataset.state = "pasted";
     label.textContent = "Pasted";
@@ -82,6 +103,7 @@ function stop() {
 }
 
 hold.addEventListener("pointerdown", (e) => {
+  if (e.button !== 0) return;
   hold.setPointerCapture(e.pointerId);
   start();
 });
@@ -100,10 +122,25 @@ addEventListener("keydown", (e) => { if (e.code === "AltRight" && !e.repeat) sta
 addEventListener("keyup", (e) => { if (e.code === "AltRight") stop(); });
 addEventListener("blur", stop);
 
+const copyStatus = $("copy-status");
 for (const button of document.querySelectorAll(".copy")) {
+  let reset;
   button.addEventListener("click", async () => {
-    await navigator.clipboard.writeText(button.previousElementSibling.textContent);
-    button.textContent = "Copied";
-    setTimeout(() => (button.textContent = "Copy"), 1500);
+    const code = button.previousElementSibling;
+    try {
+      await navigator.clipboard.writeText(code.textContent);
+      button.textContent = "Copied";
+      copyStatus.textContent = "Copied to the clipboard.";
+    } catch {
+      // No clipboard access: select the command so ⌘C works.
+      getSelection().selectAllChildren(code);
+      button.textContent = "Selected";
+      copyStatus.textContent = "Selected. Press Command-C to copy.";
+    }
+    clearTimeout(reset);
+    reset = setTimeout(() => {
+      button.textContent = "Copy";
+      copyStatus.textContent = "";
+    }, 1500);
   });
 }

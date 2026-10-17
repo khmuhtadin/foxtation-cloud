@@ -7,14 +7,17 @@
   --rule: rgba(30, 33, 64, 0.16);
   --accent: #5B6FE0;
   --pink: #D8456B;
-  --good: #2E9E62;
   --chip: #E9EFFA;
   --button: #1E2140;
   --button-ink: #FFFFFF;
+  --raised: 0 1px 2px rgba(30, 33, 64, 0.06), 0 8px 24px rgba(30, 33, 64, 0.06);
+  --image-edge: rgba(0, 0, 0, 0.1);
 
   --serif: "Iowan Old Style", "Charter", Georgia, serif;
   --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 
   color-scheme: light dark;
 }
@@ -28,10 +31,12 @@
     --rule: rgba(238, 241, 255, 0.14);
     --accent: #8696FF;
     --pink: #FF7A99;
-    --good: #5BD08F;
     --chip: #2A3257;
     --button: #EEF1FF;
     --button-ink: #151A33;
+    /* Shadows don't read on a dark page; a faint ring does. */
+    --raised: 0 0 0 1px rgba(255, 255, 255, 0.07);
+    --image-edge: rgba(255, 255, 255, 0.1);
   }
 }
 
@@ -54,10 +59,15 @@ body {
 
 img { display: block; max-width: 100%; height: auto; }
 
-a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 0.2em; text-decoration-color: var(--accent); }
-a:hover { text-decoration-thickness: 2px; }
-:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
-::selection { background: color-mix(in srgb, var(--accent) 30%, transparent); }
+a {
+  color: inherit;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  text-decoration-color: var(--accent);
+}
+a, button { touch-action: manipulation; }
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+::selection { background: color-mix(in oklch, var(--accent) 30%, transparent); }
 
 p { margin: 0 0 1em; }
 h1, h2, h3 { margin: 0; text-wrap: balance; }
@@ -71,8 +81,17 @@ del {
 kbd, code {
   font: 0.85em var(--mono);
   background: var(--chip);
-  border-radius: 5px;
+  border-radius: 4px;
   padding: 0.1em 0.4em;
+  white-space: nowrap;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
   white-space: nowrap;
 }
 
@@ -89,35 +108,40 @@ kbd, code {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-block: 20px;
+  padding-block: 16px;
 }
-.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 600; font-size: 1.0625rem; }
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 600; min-height: 44px; }
 .brand img { border-radius: 7px; }
 nav { display: flex; align-items: center; gap: 24px; font-size: 0.9375rem; }
-nav a:not(.button) { text-decoration: none; color: var(--muted); }
-nav a:not(.button):hover { color: var(--ink); }
+nav a:not(.button) { text-decoration: none; color: var(--muted); padding-block: 10px; transition: color 150ms ease; }
 @media (max-width: 600px) { .hide-sm { display: none; } }
 
+/* Buttons */
+
 .button {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 0 20px;
+  border-radius: 10px;
   background: var(--button);
   color: var(--button-ink);
   font-weight: 600;
   text-decoration: none;
-  padding: 12px 20px;
-  border-radius: 10px;
   white-space: nowrap;
+  transition: background-color 150ms ease, transform 160ms var(--ease-out);
 }
-.button:hover { opacity: 0.88; }
-.button:active { transform: scale(0.98); }
-.button.small { padding: 7px 14px; border-radius: 8px; font-size: 0.9375rem; }
+.button:active { transform: scale(0.97); }
+.button.secondary { background: var(--card); color: var(--ink); box-shadow: 0 0 0 1px var(--rule); }
+.button.small { min-height: 40px; padding: 0 14px; border-radius: 8px; font-size: 0.9375rem; }
+@media (pointer: coarse) { .button.small { min-height: 44px; } }
 
-.quiet { color: var(--muted); font-size: 0.9375rem; }
+.quiet { color: var(--muted); font-size: 0.9375rem; padding-block: 12px; }
 .fine { color: var(--muted); font-size: 0.875rem; }
 
 /* Hero */
 
-.hero { padding-block: 40px 72px; }
+.hero { padding-block: 32px 64px; }
 
 h1 {
   font-family: var(--serif);
@@ -138,7 +162,7 @@ h1 {
 }
 
 .lede > p:first-child { font-size: 1.1875rem; max-width: 30em; text-wrap: pretty; }
-.actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; margin: 28px 0 14px; }
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 24px; margin: 24px 0 12px; }
 
 /* Demo: a message field, the dictation pill, and what Whisper heard */
 
@@ -147,20 +171,22 @@ h1 {
 .screen {
   position: relative;
   background: var(--card);
-  border-radius: 14px;
-  padding: 22px 22px 52px;
-  box-shadow: 0 1px 2px rgba(30, 33, 64, 0.06), 0 8px 24px rgba(30, 33, 64, 0.06);
+  border-radius: 16px;
+  padding: 24px 24px 56px;
+  box-shadow: var(--raised);
 }
-.to { font-size: 0.8125rem; color: var(--muted); }
+.to { display: block; font-size: 0.8125rem; color: var(--muted); }
 .typed {
   margin: 8px 0 0;
-  min-height: 3.2em;
-  font-size: 1.125rem;
-  line-height: 1.5;
-  padding: 12px 14px;
+  /* Room for the longest replay, so the card never changes height. */
+  min-height: calc(1lh + 26px);
+  font-size: 1.1875rem;
+  line-height: 1.45;
+  padding: 12px 16px;
   border: 1px solid var(--rule);
   border-radius: 10px;
 }
+@media (max-width: 560px) { .typed { min-height: calc(2lh + 26px); } }
 .typed:empty::after {
   content: "";
   display: inline-block;
@@ -190,6 +216,8 @@ h1 {
   box-shadow: 0 10px 28px rgba(18, 21, 47, 0.35);
   font-size: 0.9375rem;
   white-space: nowrap;
+  user-select: none;
+  -webkit-user-select: none;
 }
 .pill[data-state="pasted"] { --edge: #34C759; }
 .pill[data-state="cleaning"] { --edge: #F5A524; }
@@ -211,45 +239,48 @@ h1 {
 @keyframes level { from { transform: scaleY(0.35); } to { transform: scaleY(1); } }
 
 .demo figcaption {
-  margin-top: 46px;
+  margin-top: 48px;
   font: 0.9375rem/1.6 var(--mono);
   overflow-wrap: break-word;
 }
 .tag {
-  font: 600 0.6875rem/1 var(--sans);
+  font: 600 0.75rem/1 var(--sans);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--muted);
-  margin-right: 10px;
+  margin-right: 8px;
 }
+/* While the replay is listening, nothing is crossed out yet. */
+.heard:not([data-cut]) del { color: inherit; text-decoration: none; }
 
 .hold {
-  margin-top: 18px;
+  margin-top: 16px;
+  min-height: 44px;
+  padding: 8px 16px;
   font: inherit;
   font-size: 0.9375rem;
   color: var(--ink);
   background: transparent;
   border: 1px solid var(--rule);
   border-radius: 10px;
-  padding: 10px 16px;
   cursor: pointer;
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
   touch-action: none;
+  transition: background-color 150ms ease, border-color 150ms ease, transform 160ms var(--ease-out);
 }
-.hold:hover { border-color: var(--muted); }
-.hold[aria-pressed="true"] { border-color: var(--accent); background: var(--card); }
+.hold[data-held] { border-color: var(--accent); background: var(--card); transform: scale(0.97); }
 @media (hover: none) { .hide-touch { display: none; } }
 
-.note { margin-top: 14px; font-size: 0.8125rem; color: var(--muted); max-width: 46em; }
+.note { margin: 12px 0 0; font-size: 0.8125rem; color: var(--muted); max-width: 46em; }
 
 /* Sections: a label in the margin, the content beside it. */
 
 .part {
   display: grid;
   gap: 16px;
-  padding-block: 48px;
+  padding-block: 40px;
 }
 .part::before {
   content: "";
@@ -258,7 +289,7 @@ h1 {
   margin-bottom: 8px;
 }
 @media (min-width: 900px) {
-  .part { grid-template-columns: 200px 1fr; column-gap: 48px; padding-block: 72px; }
+  .part { grid-template-columns: 200px 1fr; column-gap: 48px; padding-block: 56px; }
   .part::before { margin-bottom: 24px; }
 }
 
@@ -270,7 +301,7 @@ h1 {
 }
 
 .body { min-width: 0; max-width: 760px; }
-.body > p { max-width: 36em; text-wrap: pretty; }
+.body > p { max-width: 34em; text-wrap: pretty; }
 
 .big {
   font-family: var(--serif);
@@ -281,13 +312,17 @@ h1 {
 }
 .body > .big { margin-bottom: 0.6em; max-width: 18em; }
 
+/* App screenshots: export each file at 2x its width and height attributes so it stays sharp on Retina. */
 .shot { margin: 40px 0 0; }
 .shot img {
   border-radius: 10px;
-  box-shadow: 0 0 0 1px var(--rule), 0 12px 32px rgba(30, 33, 64, 0.10);
+  outline: 1px solid var(--image-edge);
+  outline-offset: -1px;
+  box-shadow: var(--raised);
 }
-.shot figcaption { margin-top: 14px; font-size: 0.875rem; color: var(--muted); }
+.shot figcaption { margin-top: 12px; font-size: 0.875rem; color: var(--muted); }
 .shot.wide { grid-column: 1 / -1; margin-top: 24px; }
+.shot.wide img { width: 100%; }
 
 /* Speed */
 
@@ -313,7 +348,7 @@ h3 { font-size: 1.0625rem; font-weight: 600; margin: 48px 0 8px; }
   margin: 0;
   padding: 4px 20px;
   background: var(--card);
-  border-radius: 14px;
+  border-radius: 16px;
 }
 .tones li {
   display: grid;
@@ -322,19 +357,22 @@ h3 { font-size: 1.0625rem; font-weight: 600; margin: 48px 0 8px; }
 }
 .tones li + li { border-top: 1px solid var(--rule); }
 @media (min-width: 640px) {
-  .tones li { grid-template-columns: 110px 1fr; align-items: baseline; }
+  .tones li { grid-template-columns: 112px 1fr; align-items: baseline; }
   .tones q { grid-column: 2; }
 }
 .tone { font-family: var(--serif); font-size: 1.25rem; }
 .for { font-size: 0.875rem; color: var(--muted); }
-.tones q { quotes: none; font-size: 1.0625rem; }
+.tones q { quotes: none; }
 .tones q.mono { font-family: var(--mono); font-size: 0.9375rem; }
 
 .facts { margin: 40px 0 0; }
 .facts div { padding-block: 12px; border-top: 1px solid var(--rule); }
 .facts div:last-child { border-bottom: 1px solid var(--rule); }
-@media (min-width: 640px) { .facts div { display: grid; grid-template-columns: 290px 1fr; gap: 20px; align-items: baseline; } .facts dd { margin: 0; } }
-.list { display: grid; gap: 28px 32px; margin: 0; }
+@media (min-width: 640px) {
+  .facts div { display: grid; grid-template-columns: 290px 1fr; gap: 20px; align-items: baseline; }
+  .facts dd { margin: 0; }
+}
+.list { display: grid; gap: 24px 32px; margin: 0; }
 @media (min-width: 640px) { .list { grid-template-columns: repeat(2, 1fr); } }
 dt { font-weight: 600; }
 dd { margin: 4px 0 0; color: var(--muted); text-wrap: pretty; }
@@ -345,7 +383,7 @@ dd { margin: 4px 0 0; color: var(--muted); text-wrap: pretty; }
 /* Install */
 
 .steps { margin: 0; padding: 0; list-style: none; counter-reset: step; }
-.steps li { counter-increment: step; position: relative; padding-left: 44px; margin-bottom: 28px; }
+.steps li { counter-increment: step; position: relative; padding-left: 44px; margin-bottom: 32px; }
 .steps li::before {
   content: counter(step);
   position: absolute;
@@ -356,43 +394,49 @@ dd { margin: 4px 0 0; color: var(--muted); text-wrap: pretty; }
   line-height: 1.2;
   color: var(--muted);
 }
-.steps p { margin-bottom: 10px; max-width: 36em; }
+.steps p { margin-bottom: 12px; max-width: 34em; }
 
+/* Outer radius 12 minus 6 of padding gives the Copy button its 6. */
 .code {
   display: flex;
   align-items: center;
   gap: 12px;
   background: var(--card);
-  border-radius: 10px;
-  padding: 10px 10px 10px 16px;
+  border-radius: 12px;
+  padding: 6px 6px 6px 16px;
   max-width: 640px;
 }
 .code code {
   flex: 1;
   min-width: 0;
   background: none;
-  padding: 0;
+  padding: 6px 0;
   font-size: 0.875rem;
   white-space: normal;
   overflow-wrap: anywhere;
 }
 .copy {
+  position: relative;
+  flex: none;
+  min-width: 80px;
+  min-height: 36px;
+  padding: 0 12px;
   font: 600 0.8125rem var(--sans);
   color: var(--ink);
   background: var(--chip);
   border: 0;
-  border-radius: 7px;
-  padding: 7px 12px;
+  border-radius: 6px;
   cursor: pointer;
-  flex: none;
-  min-width: 64px;
+  transition: background-color 150ms ease, transform 160ms var(--ease-out);
 }
-.copy:hover { background: color-mix(in srgb, var(--chip) 80%, var(--ink)); }
+/* 44px to tap, without making the button look bigger. */
+.copy::before { content: ""; position: absolute; inset: -4px; }
+.copy:active { transform: scale(0.97); }
 
 /* Footer */
 
 footer {
-  padding-block: 0 56px;
+  padding-block: 0 48px;
   display: grid;
   gap: 4px 20px;
   grid-template-columns: auto 1fr;
@@ -404,13 +448,28 @@ footer::before {
   content: "";
   grid-column: 1 / -1;
   border-top: 1px solid var(--rule);
-  margin-bottom: 36px;
+  margin-bottom: 32px;
 }
 footer img { grid-row: span 2; }
 footer p { margin: 0; }
-footer .links { display: flex; flex-wrap: wrap; gap: 4px 20px; }
+footer .links { display: flex; flex-wrap: wrap; column-gap: 20px; }
+footer .links a { display: inline-flex; align-items: center; min-height: 44px; }
+
+/* Hover only where there's a pointer that hovers, so taps don't leave it stuck on. */
+@media (hover: hover) and (pointer: fine) {
+  a:hover { text-decoration-thickness: 2px; }
+  nav a:not(.button):hover { color: var(--ink); }
+  .button:hover { background: color-mix(in oklch, var(--button) 86%, var(--bg)); }
+  .button.secondary:hover { background: var(--chip); }
+  .hold:hover { border-color: var(--muted); }
+  .copy:hover { background: color-mix(in oklch, var(--chip) 85%, var(--ink)); }
+}
 
 @media (prefers-reduced-motion: reduce) {
   .pill[data-state="listening"] .bars i { animation: none; }
-  .button:active { transform: none; }
+  .button, .hold, .copy { transition-property: background-color, border-color; }
+  .button:active, .copy:active, .hold[data-held] { transform: none; }
 }
+
+/* 404 */
+.lost { margin: 24px 0 0; font-size: 1.1875rem; color: var(--muted); }

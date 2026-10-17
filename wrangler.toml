@@ -5,9 +5,11 @@ workers_dev = false
 preview_urls = false
 routes = [{ pattern = "foxtation.khaisa.studio", custom_domain = true }]
 
-# The landing page. A GET that matches a file in site/ is served from there;
-# everything else, including every /v1/* request, falls through to the Worker.
-assets = { directory = "./site" }
+# The landing page. A request that matches a file in site/ is served from there.
+# A browser navigating to a page that doesn't exist gets site/404.html (status
+# 404); any other unmatched request reaches the Worker. /v1/* always runs the
+# Worker first, so the API keeps answering with JSON whatever the request.
+assets = { directory = "./site", not_found_handling = "404-page", run_worker_first = ["/v1/*"] }
 
 [vars]
 # Switch to https://sandbox-api.polar.sh while testing with sandbox license keys.
