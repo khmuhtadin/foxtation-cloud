@@ -17,14 +17,14 @@ const reply = (status: number, data?: unknown) =>
     headers: { "content-type": "application/json" },
   });
 
-const toolReply = (input: Record<string, unknown>) =>
+const textReply = (text: string) =>
   reply(200, {
     id: "msg_1",
     type: "message",
     role: "assistant",
     model: "claude-haiku-5-5",
-    content: [{ type: "tool_use", id: "toolu_1", name: "cleaned_transcript", input }],
-    stop_reason: "tool_use",
+    content: [{ type: "text", text }],
+    stop_reason: "end_turn",
     stop_sequence: null,
     usage: { input_tokens: 10, output_tokens: 10 },
   });
@@ -33,7 +33,7 @@ beforeEach(() => {
   calls = [];
   polarValidate = () => reply(200, { status: "granted" });
   polarDeactivate = () => reply(204);
-  anthropic = () => toolReply({ text: "Jadi besok jam empat.", fillers_removed: 2, self_corrections: 1, formatting_fixes: 3 });
+  anthropic = () => textReply("Jadi besok jam empat.");
 
   vi.spyOn(globalThis, "fetch").mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
     const request = new Request(input, init);
@@ -80,23 +80,23 @@ async function sha256(value: string) {
 describe("/v1/cleanup", () => {
   it("still answers an old-style request with text", async () => {
     const d = device();
-    const response = await post("/v1/cleanup", d, { text: "eh jadi besok jam empat", language: "id", app: "Notes" });
+    const response = await post("/v1/cleanup", d, { text: "eh jadi besok jam tiga, eh maksudnya jam empat", language: "id", app: "Notes" });
     expect(response.status).toBe(200);
     const data = (await response.json()) as any;
     expect(data.text).toBe("Jadi besok jam empat.");
-    expect(data.changes).toEqual({ fillers_removed: 2, self_corrections: 1, formatting_fixes: 3 });
+    expect(data.changes).toEqual({ fillers_removed: 2, self_corrections: 1, formatting_fixes: 1 });
     expect(data.usage).toMatchObject({ used: 1, limit: 500 });
     expect(userMessage()).not.toContain("<style>");
     expect(userMessage()).not.toContain("<vocabulary>");
   });
 
-  it("forces the cleanup tool with thinking off on the same model", async () => {
+  it("asks for plain text with thinking off on the same model", async () => {
     await post("/v1/cleanup", device(), { text: "halo" });
     const body = anthropicCalls()[0].body;
     expect(body.model).toBe("claude-haiku-5-5");
     expect(body.max_tokens).toBe(8000);
     expect(body.thinking).toEqual({ type: "disabled" });
-    expect(body.tool_choice).toEqual({ type: "tool", name: "cleaned_transcript" });
+    expect(body.tools).toBeUndefined();
   });
 
   it("counts each cleanup and /v1/usage peeks without counting", async () => {
@@ -124,16 +124,19 @@ describe("/v1/cleanup", () => {
 
   it("refunds on an empty tool result", async () => {
     const d = device();
-    anthropic = () => toolReply({ text: "  ", fillers_removed: 0, self_corrections: 0, formatting_fixes: 0 });
+    anthropic = () => textReply("  ");
     const response = await post("/v1/cleanup", d, { text: "halo" });
     expect(await response.json()).toEqual({ error: "empty_result" });
     expect(((await (await post("/v1/usage", d)).json()) as any).used).toBe(0);
   });
 
-  it("clamps the change counts", async () => {
-    anthropic = () => toolReply({ text: "Ok.", fillers_removed: -4, self_corrections: 2.7, formatting_fixes: "3" });
-    const data = (await (await post("/v1/cleanup", device(), { text: "ok" })).json()) as any;
-    expect(data.changes).toEqual({ fillers_removed: 0, self_corrections: 2, formatting_fixes: 0 });
+  it("counts changes by comparing the texts", async () => {
+    anthropic = () => textReply("So I think we should ship it on Tuesday.");
+    const data = (await (await post("/v1/cleanup", device(), {
+      text: "um so I think we should uh ship it on monday no wait tuesday",
+    })).json()) as any;
+    // um, uh · "no wait" · added period, So / Tuesday recased
+    expect(data.changes).toEqual({ fillers_removed: 2, self_corrections: 1, formatting_fixes: 3 });
   });
 
   it("answers 429 with usage once the day's limit is used", async () => {

@@ -52,11 +52,11 @@ Reply:
 }
 ```
 
-`changes` are the model's own counts, for display only (Insights). A `429 daily_limit` reply also carries `usage`. A cleanup that fails on Claude's side (`busy`, `upstream_error`, `refused`, `empty_result`) is refunded, so it doesn't count against the day.
+`changes` are estimated on the server by comparing the raw and cleaned text (filler words gone, correction phrases gone, punctuation and casing changes), for display only (Insights). Cleanup itself returns plain text, which is faster than structured output. A `429 daily_limit` reply also carries `usage`. A cleanup that fails on Claude's side (`busy`, `upstream_error`, `refused`, `empty_result`) is refunded, so it doesn't count against the day.
 
 ### `/v1/license`
 
-Always asks Polar (not the 10-minute cache).
+Always asks Polar (not the one-hour cache).
 
 ```json
 {
@@ -105,7 +105,7 @@ Frees this Mac's activation in Polar and drops the cached license check. `404 no
 
 ## Limits
 
-Each Mac activates once and counts against the benefit's **activation limit** in Polar. Each key gets `DAILY_LIMIT` cleanups per UTC day, counted in a Durable Object. A granted license check is cached for 10 minutes, so most dictations skip the Polar round trip.
+Each Mac activates once and counts against the benefit's **activation limit** in Polar. Each key gets `DAILY_LIMIT` cleanups per UTC day, counted in a Durable Object. A granted license check is cached for an hour, so dictations skip the Polar round trip.
 
 ## Setup
 
