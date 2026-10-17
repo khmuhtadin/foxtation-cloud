@@ -67,7 +67,9 @@ export default {
     if (url.pathname !== "/v1/cleanup" && url.pathname !== "/v1/usage") {
       return json({ error: "not_found" }, 404);
     }
+    const licenseStart = Date.now();
     const check = await licenseIsValid(key, activation, env, ctx);
+    const licenseMs = Date.now() - licenseStart;
     if (check === "busy") return json({ error: "busy" }, 503);
     if (check === "invalid") return json({ error: "invalid_license" }, 401);
 
@@ -76,14 +78,18 @@ export default {
     const limit = Number(env.DAILY_LIMIT);
 
     if (url.pathname === "/v1/usage") return json(usageReply(await usage.peek(today), limit));
-    return cleanup(request, env, usage, today, limit);
+    const response = await cleanup(request, env, ctx, key, usage, today, limit);
+    // Where the time went, for measuring from the app or curl.
+    response.headers.append("server-timing", `license;dur=${licenseMs}`);
+    return response;
   },
 };
 
 // MARK: Cleanup
 
 async function cleanup(
-  request: Request, env: Env, usage: DurableObjectStub<Usage>, today: string, limit: number,
+  request: Request, env: Env, ctx: ExecutionContext, key: string,
+  usage: DurableObjectStub<Usage>, today: string, limit: number,
 ): Promise<Response> {
   const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
   const text = typeof body?.text === "string" ? body.text.trim() : "";
@@ -114,23 +120,59 @@ async function cleanup(
     return json({ error: "invalid_options" }, 400);
   }
 
-  const taken = await usage.take(today, limit);
-  if (!taken.ok) return json({ error: "daily_limit", usage: usageReply(taken.used, limit) }, 429);
+  // A key that hit today's limit is remembered in the cache, so it's refused
+  // without calling Claude.
+  const limitedKey = new Request(`https://limited.foxtation/${await sha256(key)}/${today}`);
+  if (await caches.default.match(limitedKey)) {
+    return json({ error: "daily_limit", usage: usageReply(await usage.peek(today), limit) }, 429);
+  }
+
+  // Count the cleanup alongside Claude and never wait for it: the counter (a
+  // Durable Object) usually takes 0.03 s but sometimes 2 s, and dictation waits
+  // on this request. Going over the limit marks the key in the cache above, so
+  // at most one request slips past it.
+  const usageStart = Date.now();
+  const taking = usage.take(today, limit).then((taken) => {
+    if (!taken.ok) {
+      return caches.default.put(limitedKey, new Response("limited", { headers: { "cache-control": "max-age=3600" } }))
+        .then(() => ({ taken, ms: Date.now() - usageStart }));
+    }
+    return { taken, ms: Date.now() - usageStart };
+  });
 
   const content = userMessage({
     text, app, language, style: style as string | undefined, vocabulary, cues, spokenEmoji: spokenEmoji === true,
   });
+  const claudeStart = Date.now();
   const result = await callClaude(env, content, text);
+  const claudeMs = Date.now() - claudeStart;
+  // The count normally lands in ~30 ms; give it 150 ms more, then reply
+  // without it and let it finish in the background.
+  const counted = await Promise.race([taking, new Promise<null>((resolve) => setTimeout(() => resolve(null), 150))]);
+  ctx.waitUntil(taking);
+
+  if (counted && !counted.taken.ok) {
+    return json({ error: "daily_limit", usage: usageReply(counted.taken.used, limit) }, 429);
+  }
   if ("error" in result) {
-    await usage.refund(today);
+    ctx.waitUntil(taking.then(({ taken }) => (taken.ok ? usage.refund(today) : undefined)));
     return json({ error: result.error }, result.status);
   }
-  return json({ ...result, usage: usageReply(taken.used, limit) });
+  const response = json({
+    text: result.text,
+    changes: result.changes,
+    ...(counted ? { usage: usageReply(counted.taken.used, limit) } : {}),
+  });
+  response.headers.set("server-timing",
+    `usage;dur=${counted ? counted.ms : "pending"}, claude;dur=${claudeMs};desc="cache_read=${result.cacheRead}"`);
+  return response;
 }
 
 type Cleaned = {
   text: string;
   changes: { fillers_removed: number; self_corrections: number; formatting_fixes: number };
+  /// Prompt tokens served from cache, for Server-Timing.
+  cacheRead: number;
 };
 
 // Plain-text output: a forced tool call measured ~0.3 s slower and adds
@@ -146,7 +188,10 @@ async function callClaude(env: Env, content: string, raw: string): Promise<Clean
       model: MODEL,
       max_tokens: 8000,
       thinking: { type: "disabled" },  // dictation is latency-bound; this is a light rewrite
-      system: SYSTEM_PROMPT,
+      output_config: { effort: "low" },
+      // Cached: the prompt is the same every time, so Claude skips re-reading
+      // it. One hour keeps it warm between dictations.
+      system: [{ type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral", ttl: "1h" } }],
       messages: [{ role: "user", content }],
     });
   } catch (error) {
@@ -162,7 +207,7 @@ async function callClaude(env: Env, content: string, raw: string): Promise<Clean
     .join("")
     .trim();
   if (!text) return { error: "empty_result", status: 502 };
-  return { text, changes: countChanges(raw, text) };
+  return { text, changes: countChanges(raw, text), cacheRead: message.usage.cache_read_input_tokens ?? 0 };
 }
 
 const FILLERS = ["eh", "ehm", "em", "emm", "hmm", "anu", "apa ya", "uh", "uhm", "um", "umm", "erm", "you know"];

@@ -52,7 +52,7 @@ Reply:
 }
 ```
 
-`changes` are estimated on the server by comparing the raw and cleaned text (filler words gone, correction phrases gone, punctuation and casing changes), for display only (Insights). Cleanup itself returns plain text, which is faster than structured output. A `429 daily_limit` reply also carries `usage`. A cleanup that fails on Claude's side (`busy`, `upstream_error`, `refused`, `empty_result`) is refunded, so it doesn't count against the day.
+`usage` is included when the counter answers in time (it almost always does); otherwise it's left out and the count still happens. `changes` are estimated on the server by comparing the raw and cleaned text (filler words gone, correction phrases gone, punctuation and casing changes), for display only (Insights). Cleanup itself returns plain text, which is faster than structured output. A `429 daily_limit` reply also carries `usage`. A cleanup that fails on Claude's side (`busy`, `upstream_error`, `refused`, `empty_result`) is refunded, so it doesn't count against the day.
 
 ### `/v1/license`
 
