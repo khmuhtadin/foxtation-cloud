@@ -213,10 +213,20 @@
     </div>
   </div>
 
+  <fieldset class="billing">
+    <legend class="sr-only">Billing period</legend>
+    <input type="radio" name="billing" id="bill-month" value="month" checked>
+    <label for="bill-month">Monthly</label>
+    <input type="radio" name="billing" id="bill-year" value="year">
+    <label for="bill-year">Yearly <span class="save">−17%</span></label>
+  </fieldset>
   <div class="plans reveal">
     <div class="plan">
       <div class="plan-name"><b>Free</b><p>Forever, open source.</p></div>
-      <span class="price">$0</span>
+      <div class="price-block">
+        <span class="price">$0</span>
+        <span class="price-alt">No account, no card</span>
+      </div>
       <ul class="checks">
         <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4A56E2" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Unlimited on-device dictation, works offline</li>
         <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4A56E2" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>A one-time 1.6&nbsp;GB model download</li>
@@ -227,19 +237,12 @@
       </ul>
       <div class="plan-foot">
         <a class="btn btn-outline btn-block" href="https://github.com/khmuhtadin/foxtation/releases/latest/download/Foxtation.dmg">Download free</a>
-        <span class="billed">macOS 14+ on Apple silicon · no account needed</span>
+        <span class="billed">macOS 14+ on Apple silicon</span>
       </div>
     </div>
     <div class="plan pro">
       <span class="plan-sticker">nothing to download</span>
       <div class="plan-name"><b>Pro</b><p>Everything in Free, transcribed in the cloud.</p></div>
-      <fieldset class="billing">
-        <legend class="sr-only">Billing period</legend>
-        <input type="radio" name="billing" id="bill-month" value="month" checked>
-        <label for="bill-month">Monthly</label>
-        <input type="radio" name="billing" id="bill-year" value="year">
-        <label for="bill-year">Yearly <span class="save">−17%</span></label>
-      </fieldset>
       <div class="price-block">
         <span class="price when-month">$12<small>/month</small></span>
         <span class="price when-year">$120<small>/year</small></span>

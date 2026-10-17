@@ -187,8 +187,10 @@ code { font-family: var(--mono); }
 .term-prompt { color: #9AA4FF; }
 .block-caret { display: inline-block; width: 8px; height: 16px; margin-left: 4px; background: #9AA4FF; vertical-align: -2px; }
 
-.plans { margin-top: 64px; display: flex; flex-wrap: wrap; gap: 20px; align-items: stretch; }
-.plan { position: relative; flex: 1 1 320px; min-width: 0; background: var(--card); border-radius: 32px; padding: 32px; display: flex; flex-direction: column; gap: 22px; }
+/* The cards share the grid's rows (subgrid), so name, price, list and button
+   line up across both whatever wraps. */
+.plans { margin-top: 28px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 20px; }
+.plan { position: relative; min-width: 0; background: var(--card); border-radius: 32px; padding: 32px; display: grid; grid-row: span 4; grid-template-rows: subgrid; row-gap: 22px; }
 /* Pro is a deep indigo card: on periwinkle (L 0.64) ink text had too small a
    lightness gap to read comfortably; near-white on L 0.33 is about 11:1. */
 .plan.pro { background: oklch(0.33 0.12 274); color: oklch(0.985 0.005 274); }
@@ -345,20 +347,20 @@ code { font-family: var(--mono); }
 
 /* Pro plan: monthly and yearly price */
 .price-block { display: flex; flex-direction: column; gap: 8px; }
-.price-alt { font-size: 15px; font-weight: 600; }
+.price-alt { font-size: 15px; font-weight: 600; color: var(--muted); }
 
 /* Plan footers sit at the bottom of both cards, so the two buttons line up. */
-.plan-foot { margin-top: auto; display: flex; flex-direction: column; gap: 12px; }
+.plan-foot { align-self: start; display: flex; flex-direction: column; gap: 12px; }
 .plan-foot .btn-block { margin-top: 0; }
 
 /* Monthly / Yearly: native radios, so arrow keys and screen readers work and
    the price and button switch with CSS alone. */
-.billing { margin: 0; padding: 4px; border: 0; display: inline-flex; align-self: flex-start; gap: 4px; border-radius: 999px; background: oklch(0.25 0.1 274); }
+.billing { margin: 56px auto 0; padding: 4px; border: 1px solid var(--line); display: flex; width: max-content; gap: 4px; border-radius: 999px; background: var(--card); }
 .billing input { position: absolute; width: 1px; height: 1px; opacity: 0; }
-.billing label { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 18px; border-radius: 999px; font-size: 15px; font-weight: 700; color: oklch(0.86 0.045 274); cursor: pointer; transition: background-color 150ms ease, color 150ms ease; }
-.billing input:checked + label { background: oklch(0.985 0.005 274); color: var(--ink); }
-.billing input:focus-visible + label { outline: 2px solid var(--sun); outline-offset: 2px; }
+.billing label { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 18px; border-radius: 999px; font-size: 15px; font-weight: 700; color: var(--muted); cursor: pointer; transition: background-color 150ms ease, color 150ms ease; }
+.billing input:checked + label { background: var(--ink); color: oklch(0.985 0.005 274); }
+.billing input:focus-visible + label { outline: 2px solid var(--indigo); outline-offset: 2px; }
 .billing .save { padding: 2px 7px; border-radius: 999px; background: var(--sun); color: var(--ink); font-size: 12px; }
-.plan.pro:has(#bill-year:checked) .when-month,
-.plan.pro:not(:has(#bill-year:checked)) .when-year { display: none; }
+#pro:has(#bill-year:checked) .when-month,
+#pro:not(:has(#bill-year:checked)) .when-year { display: none; }
 @media (prefers-reduced-motion: reduce) { .billing label { transition: none; } }
