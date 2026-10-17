@@ -5,12 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Foxtation — voice dictation for Mac in Indonesian and English</title>
 <meta name="description" content="Hold right Option, speak, let go. On-device Whisper types Indonesian, English, or both in one sentence into any Mac app, about half a second after you release. Free and open source.">
-<meta name="color-scheme" content="light dark">
-<meta name="theme-color" content="#DCE7F8" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#151A33" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#F5F7FF">
 <link rel="canonical" href="https://foxtation.khaisa.studio/">
 <link rel="icon" type="image/png" href="/assets/favicon.png">
 <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+<link rel="preload" href="/assets/fonts/dm-sans.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/fraunces-italic.woff2" as="font" type="font/woff2" crossorigin>
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://foxtation.khaisa.studio/">
 <meta property="og:title" content="Foxtation — voice dictation for Mac in Indonesian and English">
@@ -18,162 +18,268 @@
 <meta property="og:image" content="https://foxtation.khaisa.studio/assets/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="Speak Indonesian, English, or both in one sentence. Your Mac types it. Below it, the Foxtation pill reads Pasted, 8 words, next to a transcript with the filler words crossed out.">
+<meta property="og:image:alt" content="Speak Indonesian, English, or both in one sentence. Your Mac types it.">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="stylesheet" href="/assets/site.css">
-<script src="/assets/demo.js" defer></script>
+<script src="/assets/copy.js" defer></script>
 </head>
 <body>
 
-<header class="masthead wrap">
-  <a class="brand" href="/">
-    <img src="/assets/favicon.png" width="28" height="28" alt="">
-    <span>Foxtation</span>
-  </a>
-  <nav aria-label="Main">
-    <a class="hide-sm" href="#pro">Pro</a>
-    <a class="hide-sm" href="#install">Install</a>
-    <a class="hide-sm" href="https://github.com/khmuhtadin/foxtation">GitHub</a>
-    <a class="button secondary small" href="https://github.com/khmuhtadin/foxtation/releases/latest">Download</a>
+<div class="nav-wrap">
+  <nav class="nav" aria-label="Main">
+    <a class="brand" href="#top">
+      <img src="/assets/favicon.png" width="34" height="34" alt="">
+      <span>foxtation</span>
+    </a>
+    <div class="nav-links">
+      <a href="#pro">Pro</a>
+      <a href="#install">Install</a>
+      <a href="https://github.com/khmuhtadin/foxtation">GitHub</a>
+      <a class="nav-cta" href="https://github.com/khmuhtadin/foxtation/releases/latest">Download</a>
+    </div>
   </nav>
-</header>
+</div>
 
 <main>
-
-<section class="hero wrap">
-  <h1>Speak Indonesian, English, or both in one sentence. Your Mac types it.</h1>
-
-  <div class="hero-body">
-    <div class="lede">
-      <p>Hold <kbd>right ⌥</kbd> anywhere, say it, let go. The text lands in whatever app you’re in: Slack, Mail, Cursor, Notes, a terminal. Whisper runs on your Mac, so your voice never leaves it.</p>
-      <div class="actions">
-        <a class="button" href="https://github.com/khmuhtadin/foxtation/releases/latest">Download for Mac</a>
-        <a class="quiet" href="#install">or install with Homebrew</a>
-      </div>
-      <p class="fine">Free and open source. macOS&nbsp;14 or later, Apple silicon.</p>
+<section id="top" class="hero">
+  <span class="badge">Free &amp; open source · macOS&nbsp;14+ · Apple silicon</span>
+  <h1>Speak Indonesian, English, or <span class="both">both</span> in one sentence.</h1>
+  <p class="hero-sub">Your Mac types it.</p>
+  <p class="lede">Hold the right <span class="kbd">⌥ option</span>, talk, let go. Whisper runs right on your Mac and types into whatever app you’re in.</p>
+  <div class="hero-actions">
+    <a class="btn btn-dark" href="https://github.com/khmuhtadin/foxtation/releases/latest">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v12"/><path d="M6 11l6 6 6-6"/><path d="M5 20h14"/></svg>
+      Download for Mac
+    </a>
+    <div class="brew">
+      <code><span class="prompt" aria-hidden="true">$</span> brew install --cask khmuhtadin/tap/foxtation</code>
+      <button type="button" class="copy" data-copy="brew install --cask khmuhtadin/tap/foxtation" aria-label="Copy the Homebrew command">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="3"/><path d="M5 15V6a2 2 0 0 1 2-2h8"/></svg>
+      </button>
     </div>
+  </div>
 
-    <figure class="demo" aria-label="Dictation replay">
-      <div class="screen">
-        <span class="to" id="demo-app">Slack · #ops</span>
-        <p class="typed" id="demo-typed" lang="id" aria-live="polite">Jadi besok meeting jam 4, di kantor ya.</p>
-        <div class="pill" id="demo-pill" data-state="pasted">
-          <img src="/assets/fox.webp" width="28" height="28" alt="">
-          <span class="pill-label" id="demo-label">Pasted</span>
-          <span class="pill-meta" id="demo-meta">· 8 words</span>
-          <span class="bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+  <div class="stage">
+    <div class="blob blob-a" aria-hidden="true"></div>
+    <div class="blob blob-b" aria-hidden="true"></div>
+    <div class="stage-card">
+      <div class="keybox" aria-hidden="true">
+        <div class="key"><b>⌥</b><span>option</span></div>
+        <div class="key-status">
+          <span class="idle">hold it…</span>
+          <div class="hold">
+            <span class="bar"></span>
+            <span class="bar" style="animation-delay:-.35s"></span>
+            <span class="bar sun" style="animation-delay:-.15s"></span>
+            <span class="bar" style="animation-delay:-.5s"></span>
+            <span class="bar" style="animation-delay:-.25s"></span>
+            <span class="bar sun" style="animation-delay:-.6s"></span>
+            <span class="bar" style="animation-delay:-.1s"></span>
+            <span class="bar" style="animation-delay:-.45s"></span>
+          </div>
         </div>
       </div>
-      <figcaption>
-        <span class="tag">Heard</span>
-        <span class="heard" id="demo-heard" lang="id" data-cut><del>eh</del> jadi besok meeting <del>jam tiga, eh maksudnya</del> jam empat, di kantor ya</span>
-      </figcaption>
-      <button class="hold" id="demo-hold" type="button">Press and hold to replay<span class="hide-touch">, or hold <kbd>right ⌥</kbd></span></button>
-      <p class="note">A replay, nothing is recorded. Pro cleanup removes the crossed-out words; without Pro you get Whisper’s transcript word for word.</p>
-    </figure>
+      <div class="speech">
+        <p class="bubble" lang="id"><span class="word w1">jadi besok</span> <span class="word en w2" lang="en">meeting</span> <span class="word w3">jam empat, di kantor ya</span><span class="caret" aria-hidden="true"></span></p>
+        <div class="langs">
+          <span class="lang id">Bahasa Indonesia</span>
+          <span class="lang en">English</span>
+          <span class="lang-note">kept as spoken, never translated</span>
+        </div>
+      </div>
+    </div>
+    <div class="sticker"><b>0.5s</b><span>to text</span></div>
   </div>
 </section>
 
-<section class="part wrap" id="languages">
-  <h2 class="margin">Languages</h2>
-  <div class="body">
-    <p class="big">You don’t have to pick a language.</p>
-    <p>Foxtation starts on auto-detect, so a Slack message that begins in Indonesian and ends in English comes out exactly that way. Nothing is translated, and <em>meeting</em>, <em>deploy</em> and <em>merge</em> stay in English because that’s how you said them. If you only ever speak one, pin it from the menu bar.</p>
-  </div>
-  <figure class="shot wide">
-    <picture>
-      <source srcset="/assets/home-dark.webp" media="(prefers-color-scheme: dark)">
-      <img src="/assets/home.webp" width="1046" height="570" loading="lazy" decoding="async" alt="The app's Home screen listing today's dictations: an Indonesian Slack message, an English email, a Cursor prompt, a mixed Indonesian–English note and a WhatsApp reply.">
-    </picture>
-    <figcaption>One day of dictation: Slack in Indonesian, Mail in English, a note in both.</figcaption>
-  </figure>
-</section>
-
-<section class="part wrap" id="speed">
-  <h2 class="margin">Speed and privacy</h2>
-  <div class="body split">
-    <p class="number">0.5<span>s</span></p>
-    <div>
-      <p class="big">From letting go of the key to text in the field.</p>
-      <p>Whisper large-v3-turbo runs on the Apple Neural Engine and transcribes while you’re still talking, so when you let go there’s almost nothing left to do. Measured on an M4. Earlier versions took about three seconds.</p>
-      <p>Your audio never leaves your Mac, and neither does your history.</p>
+<section class="section" aria-labelledby="how-h">
+  <h2 class="section-title reveal" id="how-h">Three steps. One of them is <span class="em">talking.</span></h2>
+  <div class="grid reveal">
+    <div class="card lift">
+      <span class="step-num">1</span>
+      <h3>Hold right ⌥</h3>
+      <p>In any app: Slack, Notes, your email, a code editor.</p>
+    </div>
+    <div class="card lift">
+      <span class="step-num cream">2</span>
+      <h3>Talk like you talk</h3>
+      <p>Indonesian, English, or both. Auto-detect handles the switching.</p>
+    </div>
+    <div class="card dark lift">
+      <span class="step-num peri">3</span>
+      <h3>Let go</h3>
+      <p>About half a second later, it’s typed. Measured on an M4.</p>
     </div>
   </div>
 </section>
 
-<section class="part wrap" id="pro">
-  <h2 class="margin">Pro</h2>
-  <div class="body">
-    <p class="big">Foxtation Pro writes down what you meant, not every <del>eh</del>.</p>
-    <p>On-device transcription keeps every <del>um</del>, every <del lang="id">anu</del> and every <del>no wait</del>. Pro sends the text, never the audio, to a cleanup model. It removes the fillers, applies your self-corrections, fixes punctuation and spells your dictionary words the way you wrote them. The server doesn’t keep the text.</p>
-
-    <h3>And it writes in the tone each app calls for</h3>
-    <ul class="tones">
-      <li><span class="tone" lang="id">Santai</span><span class="for">casual, for chat</span><q lang="id">oke gw otw ya, 10 menit lagi sampe</q></li>
-      <li><span class="tone" lang="id">Netral</span><span class="for">neutral, wording untouched</span><q lang="id">Oke, gw otw ya. 10 menit lagi sampe.</q></li>
-      <li><span class="tone" lang="id">Rapi</span><span class="for">polished, for email</span><q lang="id">Oke, saya sedang di jalan. Sekitar 10 menit lagi sampai.</q></li>
-      <li><span class="tone">Literal</span><span class="for">code and terminals</span><q class="mono">git commit</q></li>
-    </ul>
-
-    <dl class="facts">
-      <div><dt>Clean dictations skip the cloud</dt><dd>When there’s nothing to fix, the text pastes right away.</dd></div>
-      <div><dt>It never blocks you</dt><dd>If cleanup can’t run, you get the raw transcript.</dd></div>
-      <div><dt>500 cleanups a day</dt><dd>On up to 3&nbsp;Macs.</dd></div>
-    </dl>
-
-    <div class="buy">
-      <a class="button" href="https://buy.polar.sh/polar_cl_pGAbwRd3v6HXPARELwKUmTJlleM9LQDteqWRq41Bn7C">Get Pro, $7/month</a>
-      <p class="fine">Billed through Polar. <a href="https://polar.sh/khaisa-studios/portal">Manage your subscription</a>.<br>Without Pro, dictation stays free, open source and fully on-device.</p>
+<section class="section" aria-labelledby="demo-h">
+  <div class="demo reveal">
+    <div class="demo-copy">
+      <span class="tag">PRO CLEANUP</span>
+      <h2 id="demo-h">You ramble a bit. It sends what you <span class="em">meant.</span></h2>
+      <p>Fillers out, self-corrections applied, punctuation fixed. Only text is sent for cleanup, never audio. Without Pro you get the raw transcript, fully on-device.</p>
+    </div>
+    <div class="demo-flow">
+      <div class="heard">
+        <span class="label">heard</span>
+        <p lang="id">jadi <span class="strike">eh</span> besok meeting <span class="strike later">jam tiga, eh maksudnya</span> jam empat, di kantor ya</p>
+      </div>
+      <div class="arrow" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#151A33" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M6 13l6 6 6-6"/></svg>
+      </div>
+      <div class="sent">
+        <span class="label">sent to #tim-produk</span>
+        <p lang="id">Jadi besok meeting jam empat, di kantor ya.</p>
+      </div>
     </div>
   </div>
 </section>
 
-<section class="part wrap" id="details">
-  <h2 class="margin">Details</h2>
-  <div class="body">
-    <dl class="list">
-      <div><dt>Dictionary</dt><dd>Teach it names and terms once, plus replacements like <code>btw</code> → <code>by the way</code>.</dd></div>
-      <div><dt>Snippets</dt><dd>Say a cue mid-sentence and it expands. “My email” becomes your email address.</dd></div>
-      <div><dt>History</dt><dd>Every dictation, kept on this Mac and nowhere else.</dd></div>
-      <div><dt>Insights</dt><dd>Your speaking speed against your typing, the time saved, and your streak.</dd></div>
-    </dl>
-    <figure class="shot">
-      <picture>
-        <source srcset="/assets/dictionary-dark.webp" media="(prefers-color-scheme: dark)">
-        <img src="/assets/dictionary.webp" width="780" height="680" loading="lazy" decoding="async" alt="The Dictionary screen with names, company and product terms, and two replacements: gimana to bagaimana in email only, btw to by the way in all apps.">
-      </picture>
-    </figure>
+<section class="section" aria-labelledby="stats-h">
+  <h2 class="section-title reveal" id="stats-h">Quick, bilingual, and <span class="em">private</span> by default.</h2>
+  <div class="grid reveal">
+    <div class="card stat lift">
+      <span class="big">0.5<small>s</small></span>
+      <p>From release to text on an M4. Whisper large-v3-turbo on the Neural Engine.</p>
+    </div>
+    <div class="card stat cream lift">
+      <span class="big">ID<span class="em"> &amp; </span>EN</span>
+      <p>Auto-detect by default. Prefer one? Pin it from the menu bar.</p>
+    </div>
+    <div class="card stat lift">
+      <span class="big">0<small> bytes</small></span>
+      <p>Of audio leave your Mac. Your history stays here too.</p>
+    </div>
   </div>
 </section>
 
-<section class="part wrap" id="install">
-  <h2 class="margin">Install</h2>
-  <div class="body">
-    <ol class="steps">
+<section id="pro" class="section" aria-labelledby="pro-h">
+  <div class="pro-head">
+    <span class="tag">PRO</span>
+    <h2 id="pro-h">And it writes in the <span class="em">tone</span> each app calls for.</h2>
+  </div>
+  <div class="grid tight reveal">
+    <div class="card tone lift">
+      <div class="tone-head"><b lang="id">Santai</b><span>chat</span></div>
+      <p class="sample lilac" lang="id">oke gw otw ya, 10 menit lagi sampe</p>
+    </div>
+    <div class="card tone lift">
+      <div class="tone-head"><b lang="id">Netral</b><span>as spoken</span></div>
+      <p class="sample page" lang="id">Oke, gw otw ya. 10 menit lagi sampe.</p>
+    </div>
+    <div class="card tone lift">
+      <div class="tone-head"><b lang="id">Rapi</b><span>email</span></div>
+      <p class="sample cream" lang="id">Oke, saya sedang di jalan. Sekitar 10 menit lagi sampai.</p>
+    </div>
+    <div class="card tone dark lift">
+      <div class="tone-head"><b>Literal</b><span>terminal</span></div>
+      <p class="sample"><span class="term-prompt" aria-hidden="true">$</span> git commit<span class="block-caret" aria-hidden="true"></span></p>
+    </div>
+  </div>
+
+  <div class="plans reveal">
+    <div class="plan">
+      <div class="plan-name"><b>Free</b><p>Forever, open source.</p></div>
+      <span class="price">$0</span>
+      <ul class="checks">
+        <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4A56E2" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Unlimited on-device dictation</li>
+        <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4A56E2" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Dictionary, snippets, history, insights</li>
+        <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4A56E2" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>MIT licensed</li>
+      </ul>
+      <a class="btn btn-outline btn-block" href="https://github.com/khmuhtadin/foxtation/releases/latest">Download free</a>
+    </div>
+    <div class="plan pro">
+      <span class="plan-sticker">text only, never audio</span>
+      <div class="plan-name"><b>Pro</b><p>Cleanup + tone per app.</p></div>
+      <span class="price">$7<small>/month</small></span>
+      <ul class="checks">
+        <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#151A33" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Removes fillers, applies self-corrections, fixes punctuation</li>
+        <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#151A33" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span><span lang="id">Santai, Netral, Rapi</span>, Literal, picked per app</span></li>
+        <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#151A33" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>500 cleanups a day on up to 3&nbsp;Macs</li>
+        <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#151A33" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Clean dictations skip the cloud; failures fall back to raw</li>
+      </ul>
+      <a class="btn btn-dark btn-block" href="https://buy.polar.sh/polar_cl_pGAbwRd3v6HXPARELwKUmTJlleM9LQDteqWRq41Bn7C">Get Pro</a>
+      <span class="billed">Billed through Polar · <a href="https://polar.sh/khaisa-studios/portal">Manage subscription</a></span>
+    </div>
+  </div>
+</section>
+
+<section class="section" aria-labelledby="det-h">
+  <h2 class="section-title reveal" id="det-h">The little <span class="em">extras.</span></h2>
+  <div class="grid tight reveal">
+    <div class="card extra lift">
+      <span class="icon-dot"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4A56E2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h11"/></svg></span>
+      <h3>Dictionary</h3>
+      <p>Teach it names and terms once, and set replacements.</p>
+    </div>
+    <div class="card extra lift">
+      <span class="icon-dot cream"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#151A33" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 3L5 14h6l-1 7 8-11h-6z"/></svg></span>
+      <h3>Snippets</h3>
+      <p>Say “my email” mid-sentence and your address drops in.</p>
+    </div>
+    <div class="card extra lift">
+      <span class="icon-dot"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4A56E2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg></span>
+      <h3>History</h3>
+      <p>Every dictation, kept on this Mac and nowhere else.</p>
+    </div>
+    <div class="card extra lift">
+      <span class="icon-dot cream"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#151A33" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 19V11"/><path d="M12 19V5"/><path d="M19 19v-6"/></svg></span>
+      <h3>Insights</h3>
+      <p>Speaking vs typing speed, time saved, and your streak.</p>
+    </div>
+  </div>
+</section>
+
+<section id="install" class="section" aria-labelledby="inst-h">
+  <div class="install reveal">
+    <div class="install-copy">
+      <h2 id="inst-h">Up and running in a <span class="em">minute.</span></h2>
+      <p>macOS 14 or later, Apple silicon. Not notarized yet, so macOS asks you to approve it once.</p>
+      <a class="btn btn-sun" href="https://github.com/khmuhtadin/foxtation/releases/latest">Download the .dmg</a>
+    </div>
+    <ol class="install-steps">
       <li>
-        <p><a href="https://github.com/khmuhtadin/foxtation/releases/latest">Download the DMG</a> and drag the app to Applications. Or use Homebrew:</p>
-        <div class="code"><code>brew install --cask khmuhtadin/<wbr>tap/<wbr>foxtation</code><button type="button" class="copy" aria-label="Copy the Homebrew command">Copy</button></div>
+        <span class="n">1</span>
+        <div class="body">
+          <p>Drag it into Applications, or use Homebrew:</p>
+          <div class="cmd">
+            <code><span class="term-prompt" aria-hidden="true">$</span> brew install --cask khmuhtadin/tap/foxtation</code>
+            <button type="button" class="copy" data-copy="brew install --cask khmuhtadin/tap/foxtation" aria-label="Copy the Homebrew command"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="3"/><path d="M5 15V6a2 2 0 0 1 2-2h8"/></svg></button>
+          </div>
+        </div>
       </li>
       <li>
-        <p>The app isn’t notarized yet, so macOS blocks the first launch. Open it once, then go to System Settings › Privacy &amp; Security and click Open Anyway. Or clear the quarantine flag:</p>
-        <div class="code"><code>xattr -dr com.apple.quarantine /Applications/<wbr>Foxtation.app</code><button type="button" class="copy" aria-label="Copy the quarantine command">Copy</button></div>
+        <span class="n">2</span>
+        <div class="body">
+          <p>Open it once and approve it in System Settings › Privacy &amp; Security, or run:</p>
+          <div class="cmd">
+            <code><span class="term-prompt" aria-hidden="true">$</span> xattr -dr com.apple.quarantine /Applications/Foxtation.app</code>
+            <button type="button" class="copy" data-copy="xattr -dr com.apple.quarantine /Applications/Foxtation.app" aria-label="Copy the quarantine command"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="3"/><path d="M5 15V6a2 2 0 0 1 2-2h8"/></svg></button>
+          </div>
+        </div>
       </li>
       <li>
-        <p>On first run it downloads the 1.6&nbsp;GB speech model, then prepares it for the Neural Engine. That takes about a minute, once.</p>
+        <span class="n">3</span>
+        <div class="body">
+          <p>First launch grabs the 1.6&nbsp;GB speech model and preps it for the Neural Engine. About a minute, just once.</p>
+        </div>
       </li>
     </ol>
-    <p class="fine">Needs macOS&nbsp;14 or later on Apple silicon.</p>
-    <p class="sr-only" role="status" id="copy-status"></p>
   </div>
 </section>
-
 </main>
 
-<footer class="wrap">
-  <img src="/assets/fox.webp" width="40" height="40" alt="">
-  <p>Made in Indonesia by Khairul Muhtadin at Khaisa Studio. Free and open source under the MIT license.</p>
-  <p class="links"><a href="https://github.com/khmuhtadin/foxtation">Source on GitHub</a> <a href="https://github.com/khmuhtadin/foxtation/releases/latest">Releases</a> <a href="https://polar.sh/khaisa-studios/portal">Manage subscription</a></p>
+<footer class="footer">
+  <p class="say">Hold <span class="tapkey">⌥</span> and say <span class="em" lang="id">halo.</span></p>
+  <nav class="footer-links" aria-label="Footer">
+    <a href="https://github.com/khmuhtadin/foxtation">GitHub</a>
+    <a href="https://github.com/khmuhtadin/foxtation/releases">Releases</a>
+    <a href="https://polar.sh/khaisa-studios/portal">Manage subscription</a>
+  </nav>
+  <p class="credit">Built by Khairul Muhtadin at Khaisa Studio · MIT licensed</p>
 </footer>
 
+<p class="sr-only" role="status" aria-live="polite" id="copy-status"></p>
 </body>
 </html>
