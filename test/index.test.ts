@@ -10,6 +10,8 @@ let calls: Call[];
 let polarValidate: (body: any) => Response;
 let polarDeactivate: (body: any) => Response;
 let anthropic: (body: any) => Response;
+let scribe: (form: FormData) => Response;
+let groq: (form: FormData) => Response;
 
 const reply = (status: number, data?: unknown) =>
   new Response(data === undefined ? null : JSON.stringify(data), {
@@ -34,10 +36,17 @@ beforeEach(() => {
   polarValidate = () => reply(200, { status: "granted" });
   polarDeactivate = () => reply(204);
   anthropic = () => textReply("Jadi besok jam empat.");
+  scribe = () => reply(200, { text: "so the meeting is at four", language_code: "eng", language_probability: 0.98 });
+  groq = () => reply(200, { text: " so the meeting is at four", language: "english" });
 
   vi.spyOn(globalThis, "fetch").mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
     const request = new Request(input, init);
     const url = request.url;
+    if (url.includes("api.elevenlabs.io") || url.includes("api.groq.com")) {
+      const form = await request.formData();
+      calls.push({ url, body: form });
+      return url.includes("elevenlabs") ? scribe(form) : groq(form);
+    }
     const body = await request.json().catch(() => null);
     calls.push({ url, body });
     if (url.endsWith("/license-keys/validate")) return polarValidate(body);
@@ -67,6 +76,27 @@ function post(path: string, d: { key: string; activation?: string }, body?: unkn
     body: body === undefined ? undefined : JSON.stringify(body),
   }));
 }
+
+// A 16 kHz 16-bit mono WAV of silence, as the app sends it.
+function wav(seconds: number): ArrayBuffer {
+  const bytes = Math.round(seconds * 32000);
+  const buffer = new ArrayBuffer(44 + bytes);
+  const view = new DataView(buffer);
+  const text = (offset: number, value: string) => [...value].forEach((c, i) => view.setUint8(offset + i, c.charCodeAt(0)));
+  text(0, "RIFF"); view.setUint32(4, 36 + bytes, true); text(8, "WAVE");
+  text(12, "fmt "); view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, 1, true);
+  view.setUint32(24, 16000, true); view.setUint32(28, 32000, true); view.setUint16(32, 2, true); view.setUint16(34, 16, true);
+  text(36, "data"); view.setUint32(40, bytes, true);
+  return buffer;
+}
+
+function sendAudio(d: { key: string; activation?: string }, audio: ArrayBuffer, query = "languages=en,id") {
+  const headers: Record<string, string> = { authorization: `Bearer ${d.key}`, "content-type": "audio/wav" };
+  if (d.activation) headers["x-foxtation-activation"] = d.activation;
+  return exports.default.fetch(new Request(`https://foxtation.test/v1/transcribe?${query}`, { method: "POST", headers, body: audio }));
+}
+
+const speechCalls = (provider: string) => calls.filter((c) => c.url.includes(provider));
 
 const anthropicCalls = () => calls.filter((c) => c.url.includes("api.anthropic.com"));
 const polarCalls = (action: string) => calls.filter((c) => c.url.endsWith(`/license-keys/${action}`));
@@ -302,5 +332,72 @@ describe("/v1/deactivate", () => {
     const response = await post("/v1/deactivate", device());
     expect(response.status).toBe(404);
     expect(await response.json()).toEqual({ error: "not_found" });
+  });
+});
+
+describe("/v1/transcribe", () => {
+  it("sends the first hour to Scribe v2", async () => {
+    const response = await sendAudio(device(), wav(5));
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ text: "so the meeting is at four", language: "en", engine: "scribe" });
+    const form = speechCalls("elevenlabs")[0].body as FormData;
+    expect(form.get("model_id")).toBe("scribe_v2");
+    expect(form.get("language_code")).toBeNull();  // two languages: auto detect
+    expect(speechCalls("groq")).toHaveLength(0);
+  });
+
+  it("passes the language when there is only one", async () => {
+    await sendAudio(device(), wav(5), "languages=de");
+    expect((speechCalls("elevenlabs")[0].body as FormData).get("language_code")).toBe("de");
+  });
+
+  it("goes to Groq large-v3 once today's Scribe hour is used", async () => {
+    const d = device();
+    const stub = env.USAGE.get(env.USAGE.idFromName(await sha256(d.key)));
+    const today = new Date().toISOString().slice(0, 10);
+    await runInDurableObject(stub, (_, state) => state.storage.put("audio", { day: today, seconds: 3598, scribe: 3598 }));
+    const data = (await (await sendAudio(d, wav(5))).json()) as any;
+    expect(data).toEqual({ text: "so the meeting is at four", language: "en", engine: "groq" });
+    const form = speechCalls("groq")[0].body as FormData;
+    expect(form.get("model")).toBe("whisper-large-v3");
+    expect(speechCalls("elevenlabs")).toHaveLength(0);
+  });
+
+  it("refuses past the daily cap", async () => {
+    const d = device();
+    const stub = env.USAGE.get(env.USAGE.idFromName(await sha256(d.key)));
+    const today = new Date().toISOString().slice(0, 10);
+    await runInDurableObject(stub, (_, state) => state.storage.put("audio", { day: today, seconds: 10798, scribe: 3600 }));
+    const response = await sendAudio(d, wav(5));
+    expect(response.status).toBe(429);
+    expect(await response.json()).toEqual({ error: "daily_limit" });
+  });
+
+  it("falls back to Groq when Scribe fails", async () => {
+    scribe = () => reply(500, { detail: "down" });
+    const data = (await (await sendAudio(device(), wav(5))).json()) as any;
+    expect(data.engine).toBe("groq");
+    expect(data.text).toBe("so the meeting is at four");
+  });
+
+  it("sends a guess outside your languages again in your first one", async () => {
+    let n = 0;
+    scribe = (form) => {
+      n += 1;
+      return form.get("language_code") === "id"
+        ? reply(200, { text: "lalu aku mau kau juga setting", language_code: "ind" })
+        : reply(200, { text: "lalo ako maungkaw", language_code: "tgl" });
+    };
+    const data = (await (await sendAudio(device(), wav(5), "languages=id,en")).json()) as any;
+    expect(n).toBe(2);
+    expect(data).toEqual({ text: "lalu aku mau kau juga setting", language: "id", engine: "scribe" });
+  });
+
+  it("rejects what isn't a WAV and needs a license", async () => {
+    const bad = await sendAudio(device(), new TextEncoder().encode("hello").buffer as ArrayBuffer);
+    expect(bad.status).toBe(400);
+    polarValidate = () => reply(404);
+    expect((await sendAudio(device(), wav(5))).status).toBe(401);
+    expect(speechCalls("elevenlabs")).toHaveLength(0);
   });
 });

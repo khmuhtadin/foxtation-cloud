@@ -20,10 +20,14 @@ POLAR_ORGANIZATION_ID = "98cabd68-171f-4362-bf23-c277be23a276"
 POLAR_PORTAL_URL = "https://polar.sh/khaisa-studios/portal"
 # Cleanups per license key per UTC day
 DAILY_LIMIT = "500"
+# Cloud transcription per license key per UTC day, in seconds of speech: the
+# first SCRIBE_SECONDS go to ElevenLabs Scribe v2, the rest to Groq, up to AUDIO_SECONDS.
+SCRIBE_SECONDS = "3600"
+AUDIO_SECONDS = "10800"
 # Anthropic Console › Settings › Workspaces › Foxtation (wrkspc_…)
 ANTHROPIC_WORKSPACE_ID = "wrkspc_0178eLUwQhdNzJyRERLWMZWv"
 
-# Secret, set with: npx wrangler secret put ANTHROPIC_API_KEY
+# Secrets, set with: npx wrangler secret put ANTHROPIC_API_KEY (and ELEVENLABS_API_KEY, GROQ_API_KEY)
 
 [[durable_objects.bindings]]
 name = "USAGE"

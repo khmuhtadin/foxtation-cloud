@@ -8,6 +8,10 @@ interface Env {
   POLAR_API: string;
   POLAR_PORTAL_URL: string;
   DAILY_LIMIT: string;
+  ELEVENLABS_API_KEY: string;
+  GROQ_API_KEY: string;
+  SCRIBE_SECONDS: string;
+  AUDIO_SECONDS: string;
   USAGE: DurableObjectNamespace<Usage>;
 }
 
@@ -67,7 +71,7 @@ export default {
     if (url.pathname === "/v1/deactivate") return deactivate(key, activation, env);
     if (url.pathname === "/v1/license") return license(key, activation, env);
 
-    if (url.pathname !== "/v1/cleanup" && url.pathname !== "/v1/usage") {
+    if (url.pathname !== "/v1/cleanup" && url.pathname !== "/v1/usage" && url.pathname !== "/v1/transcribe") {
       return json({ error: "not_found" }, 404);
     }
     const licenseStart = Date.now();
@@ -81,12 +85,149 @@ export default {
     const limit = Number(env.DAILY_LIMIT);
 
     if (url.pathname === "/v1/usage") return json(usageReply(await usage.peek(today), limit));
+    if (url.pathname === "/v1/transcribe") return transcribe(request, env, ctx, key, usage, today);
     const response = await cleanup(request, env, ctx, key, usage, today, limit);
     // Where the time went, for measuring from the app or curl.
     response.headers.append("server-timing", `license;dur=${licenseMs}`);
     return response;
   },
 };
+
+// MARK: Transcription
+
+// Pro dictation without the on-device model. The app sends each stretch of
+// speech as a WAV while the user is still talking. The first hour a day per key
+// goes to ElevenLabs Scribe v2 (the most accurate in our tests: 4.9% word
+// errors vs 8.7% for Whisper large-v3 across 23 languages), the rest to Groq's
+// Whisper large-v3 (half the price, a little faster). AUDIO_SECONDS caps a day.
+const MAX_AUDIO = 2_000_000;  // ~60 s of 16 kHz 16-bit mono; the app sends ≤ 25 s
+
+// Whisper names the language it heard; Scribe gives ISO 639-3 codes. Both map to
+// the app's two-letter codes.
+const LANGUAGE_CODES: Record<string, string> = {
+  english: "en", indonesian: "id", malay: "ms", german: "de", french: "fr", spanish: "es", italian: "it",
+  portuguese: "pt", dutch: "nl", swedish: "sv", danish: "da", norwegian: "no", nynorsk: "no", finnish: "fi",
+  polish: "pl", turkish: "tr", russian: "ru", japanese: "ja", korean: "ko", chinese: "zh", arabic: "ar",
+  hindi: "hi", thai: "th", vietnamese: "vi",
+  eng: "en", ind: "id", msa: "ms", zlm: "ms", deu: "de", fra: "fr", spa: "es", ita: "it", por: "pt",
+  nld: "nl", swe: "sv", dan: "da", nor: "no", nob: "no", nno: "no", fin: "fi", pol: "pl", tur: "tr",
+  rus: "ru", jpn: "ja", kor: "ko", zho: "zh", cmn: "zh", ara: "ar", arb: "ar", hin: "hi", tha: "th", vie: "vi",
+};
+const LANGUAGES = new Set(Object.values(LANGUAGE_CODES));
+
+function languageCode(value: unknown): string {
+  const name = typeof value === "string" ? value.toLowerCase() : "";
+  return LANGUAGE_CODES[name] ?? name;
+}
+
+type Heard = { text: string; language: string };
+
+async function transcribe(
+  request: Request, env: Env, ctx: ExecutionContext, key: string,
+  usage: DurableObjectStub<Usage>, today: string,
+): Promise<Response> {
+  const url = new URL(request.url);
+  // The languages this person speaks: auto detect may only pick one of these.
+  const languages = (url.searchParams.get("languages") ?? "").split(",").filter((code) => LANGUAGES.has(code));
+  const pinned = url.searchParams.get("language") ?? "auto";
+  if (pinned !== "auto" && !LANGUAGES.has(pinned)) return json({ error: "invalid_language" }, 400);
+
+  const audio = await request.arrayBuffer();
+  if (audio.byteLength > MAX_AUDIO) return json({ error: "audio_too_long" }, 413);
+  const seconds = wavSeconds(audio);
+  if (seconds === null || seconds < 0.1) return json({ error: "invalid_audio" }, 400);
+
+  const scribeLimit = Number(env.SCRIBE_SECONDS);
+  const audioLimit = Number(env.AUDIO_SECONDS);
+  const limitedKey = new Request(`https://audio-limited.foxtation/${await sha256(key)}/${today}`);
+  if (await caches.default.match(limitedKey)) return json({ error: "daily_limit" }, 429);
+
+  // Same deal as cleanup: the counter decides Scribe or Groq, but it may take
+  // 2 s now and then, so after 150 ms go with Scribe and let it count in the background.
+  const counting = usage.listen(today, seconds, scribeLimit, audioLimit).then(async (counted) => {
+    if (!counted.ok) {
+      await caches.default.put(limitedKey, new Response("limited", { headers: { "cache-control": "max-age=3600" } }));
+    }
+    return counted;
+  });
+  const counted = await Promise.race([counting, new Promise<null>((resolve) => setTimeout(() => resolve(null), 150))]);
+  ctx.waitUntil(counting);
+  if (counted && !counted.ok) return json({ error: "daily_limit" }, 429);
+
+  const engine = counted && !counted.scribe ? "groq" : "scribe";
+  const hint = pinned !== "auto" ? pinned : languages.length === 1 ? languages[0] : undefined;
+  const started = Date.now();
+  let used = engine;
+  let heard = await listen(env, engine, audio, hint);
+  if (!heard && engine === "scribe") {
+    used = "groq";  // Scribe is down or refused: Groq still gets the words
+    heard = await listen(env, "groq", audio, hint);
+  }
+  if (!heard) return json({ error: "upstream_error" }, 502);
+  // A guess outside the person's languages (Indonesian heard as Tagalog) is
+  // sent again in their first language.
+  if (!hint && languages.length > 0 && heard.text && !languages.includes(heard.language)) {
+    heard = (await listen(env, used, audio, languages[0])) ?? heard;
+  }
+  const response = json({ text: heard.text, language: heard.language, engine: used });
+  response.headers.set("server-timing", `${used};dur=${Date.now() - started}`);
+  return response;
+}
+
+// One stretch of speech to Scribe or Groq; null when the provider fails.
+async function listen(env: Env, engine: string, audio: ArrayBuffer, language?: string): Promise<Heard | null> {
+  const form = new FormData();
+  form.append("file", new Blob([audio], { type: "audio/wav" }), "speech.wav");
+  let request: Request;
+  if (engine === "scribe") {
+    form.append("model_id", "scribe_v2");
+    form.append("tag_audio_events", "false");
+    if (language) form.append("language_code", language);
+    request = new Request("https://api.elevenlabs.io/v1/speech-to-text", {
+      method: "POST", headers: { "xi-api-key": env.ELEVENLABS_API_KEY }, body: form,
+    });
+  } else {
+    form.append("model", "whisper-large-v3");
+    form.append("response_format", "verbose_json");
+    form.append("temperature", "0");
+    if (language) form.append("language", language);
+    request = new Request("https://api.groq.com/openai/v1/audio/transcriptions", {
+      method: "POST", headers: { authorization: `Bearer ${env.GROQ_API_KEY}` }, body: form,
+    });
+  }
+  try {
+    const response = await fetch(request);
+    if (!response.ok) {
+      console.error(engine, response.status, (await response.text()).slice(0, 300));
+      return null;
+    }
+    const data = (await response.json()) as { text?: string; language?: string; language_code?: string };
+    return { text: (data.text ?? "").trim(), language: languageCode(data.language ?? data.language_code) || language || "" };
+  } catch (error) {
+    console.error(engine, error);
+    return null;
+  }
+}
+
+// Length of a PCM WAV from its header; null for anything else.
+function wavSeconds(audio: ArrayBuffer): number | null {
+  if (audio.byteLength < 44) return null;
+  const view = new DataView(audio);
+  const tag = (offset: number) => String.fromCharCode(...new Uint8Array(audio, offset, 4));
+  if (tag(0) !== "RIFF" || tag(8) !== "WAVE") return null;
+  let offset = 12;
+  let bytesPerSecond = 0;
+  while (offset + 8 <= audio.byteLength) {
+    const size = view.getUint32(offset + 4, true);
+    if (tag(offset) === "fmt ") bytesPerSecond = view.getUint32(offset + 16, true);
+    if (tag(offset) === "data") {
+      if (!bytesPerSecond) return null;
+      return Math.min(size, audio.byteLength - offset - 8) / bytesPerSecond;
+    }
+    offset += 8 + size + (size % 2);
+  }
+  return null;
+}
 
 // MARK: Cleanup
 
@@ -309,6 +450,19 @@ export class Usage extends DurableObject {
   async refund(day: string): Promise<void> {
     const used = await this.peek(day);
     await this.ctx.storage.put("usage", { day, count: Math.max(0, used - 1) });
+  }
+
+  // Seconds of speech transcribed today: all of it, and how much went to Scribe.
+  // Counts this stretch and says whether it may go to Scribe.
+  async listen(day: string, seconds: number, scribeLimit: number, audioLimit: number):
+      Promise<{ ok: boolean; scribe: boolean; seconds: number }> {
+    const stored = await this.ctx.storage.get<{ day: string; seconds: number; scribe: number }>("audio");
+    const today = stored?.day === day ? stored : { day, seconds: 0, scribe: 0 };
+    if (today.seconds + seconds > audioLimit) return { ok: false, scribe: false, seconds: today.seconds };
+    const scribe = today.scribe + seconds <= scribeLimit;
+    const next = { day, seconds: today.seconds + seconds, scribe: today.scribe + (scribe ? seconds : 0) };
+    await this.ctx.storage.put("audio", next);
+    return { ok: true, scribe, seconds: next.seconds };
   }
 }
 

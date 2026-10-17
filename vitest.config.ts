@@ -5,7 +5,7 @@ export default defineConfig({
   plugins: [
     cloudflareTest({
       wrangler: { configPath: "./wrangler.toml" },
-      miniflare: { bindings: { ANTHROPIC_API_KEY: "test-key" } },
+      miniflare: { bindings: { ANTHROPIC_API_KEY: "test-key", ELEVENLABS_API_KEY: "test-key", GROQ_API_KEY: "test-key" } },
     }),
   ],
 });
