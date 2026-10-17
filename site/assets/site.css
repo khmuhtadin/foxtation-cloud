@@ -38,7 +38,6 @@ body {
 }
 main { overflow-x: clip; }
 a { color: var(--indigo); }
-a:hover { color: var(--ink); }
 a { text-decoration-thickness: from-font; text-underline-offset: 0.18em; }
 ::selection { background: var(--sun); color: var(--ink); }
 h1, h2, h3, .footer .say { text-wrap: balance; }
@@ -72,9 +71,7 @@ code { font-family: var(--mono); }
 @media (hover: hover) and (pointer: fine) { .btn:hover { transform: translateY(-2px) scale(1.03); } }
 .btn:active { transform: scale(.97); }
 .btn-dark { background: var(--ink); color: #FFFFFF; }
-.btn-dark:hover { color: #FFFFFF; }
 .btn-sun { background: var(--sun); color: var(--ink); }
-.btn-sun:hover { color: var(--ink); }
 .btn-outline { border: 2px solid var(--ink); color: var(--ink); }
 .btn-block { display: flex; margin-top: auto; min-height: 52px; font-size: 16px; }
 
@@ -91,9 +88,7 @@ code { font-family: var(--mono); }
 .brand span { font-weight: 800; font-size: 20px; letter-spacing: -0.02em; }
 .nav-links { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; font-size: 15px; font-weight: 500; }
 .nav-links a { padding: 12px 14px; color: var(--ink); text-decoration: none; border-radius: 999px; }
-.nav-links a:hover { background: var(--page); }
 .nav-links .nav-cta { padding: 12px 20px; margin-left: 4px; background: var(--ink); color: #FFFFFF; font-weight: 700; }
-.nav-links .nav-cta:hover { background: var(--ink); color: #FFFFFF; }
 
 /* Hero */
 .hero { max-width: 1120px; margin: 0 auto; padding: 72px 16px 0; display: flex; flex-direction: column; align-items: center; text-align: center; }
@@ -108,7 +103,6 @@ code { font-family: var(--mono); }
 .brew code { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .prompt { color: var(--faint); }
 .copy { flex: none; width: 44px; height: 44px; border: 0; border-radius: 50%; background: var(--lilac); color: var(--indigo); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .15s; }
-.copy:hover { background: #D9DFFF; }
 .copy[data-done] { background: var(--sun); color: var(--ink); }
 
 /* Hero visual */
@@ -230,7 +224,6 @@ code { font-family: var(--mono); }
 .cmd { display: flex; align-items: center; gap: 8px; background: #10142A; border-radius: 12px; padding: 6px 6px 6px 14px; }
 .cmd code { flex: 1; min-width: 0; overflow-x: auto; white-space: nowrap; font-size: 14px; padding: 6px 0; }
 .cmd .copy { width: 36px; height: 36px; background: #262C4D; color: #9AA4FF; }
-.cmd .copy:hover { background: #313863; }
 
 /* Footer */
 .footer { max-width: 1120px; margin: 0 auto; padding: 112px 16px 48px; display: flex; flex-direction: column; align-items: center; gap: 28px; text-align: center; }
@@ -342,7 +335,6 @@ code { font-family: var(--mono); }
   .lang-row:nth-child(2) { animation-duration: 70s; }
   .lang-row span { margin-bottom: 0; }
   .lang-row .again { display: block; }
-  .lang-rows:hover .lang-row { animation-play-state: paused; }
 }
 
 /* Pro plan: monthly and yearly price */
@@ -385,3 +377,26 @@ code { font-family: var(--mono); }
 .doc details p { margin: 0; padding: 0 22px 20px; color: var(--muted); }
 .doc details summary:focus-visible { border-radius: 18px; }
 .footer-small { padding-top: 96px; }
+
+/* Hover states only where there's a pointer that hovers: on a phone a tap
+   would leave them stuck. Order matters: buttons override the link color. */
+@media (hover: hover) and (pointer: fine) {
+  a:hover { color: var(--ink); }
+  .btn-dark:hover { color: #FFFFFF; }
+  .btn-sun:hover { color: var(--ink); }
+  .nav-links a:hover { background: var(--page); }
+  .nav-links .nav-cta:hover { background: var(--ink); color: #FFFFFF; }
+  .copy:hover { background: #D9DFFF; }
+  .cmd .copy:hover { background: #313863; }
+  .lang-rows:hover .lang-row { animation-play-state: paused; }
+}
+
+/* Controls: no double-tap zoom delay, no text selection on tap-and-hold. */
+a, button, label { touch-action: manipulation; }
+button, .billing label { user-select: none; -webkit-user-select: none; }
+
+/* In-page links (#pro, #install, #refunds) land with a little room above. */
+[id] { scroll-margin-top: 24px; }
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
