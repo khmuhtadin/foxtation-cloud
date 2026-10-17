@@ -100,6 +100,7 @@ export default {
 // goes to ElevenLabs Scribe v2 (the most accurate in our tests: 4.9% word
 // errors vs 8.7% for Whisper large-v3 across 23 languages), the rest to Groq's
 // Whisper large-v3 (half the price, a little faster). AUDIO_SECONDS caps a day.
+// Counted in seconds of speech by the WAV header, not by what the app claims.
 const MAX_AUDIO = 2_000_000;  // ~60 s of 16 kHz 16-bit mono; the app sends ≤ 25 s
 
 // Whisper names the language it heard; Scribe gives ISO 639-3 codes. Both map to
@@ -137,24 +138,22 @@ async function transcribe(
   const seconds = wavSeconds(audio);
   if (seconds === null || seconds < 0.1) return json({ error: "invalid_audio" }, 400);
 
-  const scribeLimit = Number(env.SCRIBE_SECONDS);
-  const audioLimit = Number(env.AUDIO_SECONDS);
-  const limitedKey = new Request(`https://audio-limited.foxtation/${await sha256(key)}/${today}`);
-  if (await caches.default.match(limitedKey)) return json({ error: "daily_limit" }, 429);
+  // Counting never holds up the reply (the counter sometimes takes 2 s). What it
+  // decides is remembered in the cache for the rest of the day: Scribe's hour is
+  // used up, or the day's cap is reached. So at most one stretch slips past each.
+  const hash = await sha256(key);
+  const limitedKey = new Request(`https://audio-limited.foxtation/${hash}/${today}`);
+  const groqKey = new Request(`https://scribe-used.foxtation/${hash}/${today}`);
+  const [limited, scribeUsed] = await Promise.all([caches.default.match(limitedKey), caches.default.match(groqKey)]);
+  if (limited) return json({ error: "daily_limit" }, 429);
+  const remember = (cacheKey: Request) =>
+    caches.default.put(cacheKey, new Response("1", { headers: { "cache-control": "max-age=86400" } }));
+  ctx.waitUntil(usage.listen(today, seconds, Number(env.SCRIBE_SECONDS), Number(env.AUDIO_SECONDS)).then(async (counted) => {
+    if (!counted.ok) await remember(limitedKey);
+    if (!counted.scribe) await remember(groqKey);
+  }));
 
-  // Same deal as cleanup: the counter decides Scribe or Groq, but it may take
-  // 2 s now and then, so after 150 ms go with Scribe and let it count in the background.
-  const counting = usage.listen(today, seconds, scribeLimit, audioLimit).then(async (counted) => {
-    if (!counted.ok) {
-      await caches.default.put(limitedKey, new Response("limited", { headers: { "cache-control": "max-age=3600" } }));
-    }
-    return counted;
-  });
-  const counted = await Promise.race([counting, new Promise<null>((resolve) => setTimeout(() => resolve(null), 150))]);
-  ctx.waitUntil(counting);
-  if (counted && !counted.ok) return json({ error: "daily_limit" }, 429);
-
-  const engine = counted && !counted.scribe ? "groq" : "scribe";
+  const engine = scribeUsed ? "groq" : "scribe";
   const hint = pinned !== "auto" ? pinned : languages.length === 1 ? languages[0] : undefined;
   const started = Date.now();
   let used = engine;

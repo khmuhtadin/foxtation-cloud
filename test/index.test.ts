@@ -356,11 +356,13 @@ describe("/v1/transcribe", () => {
     const stub = env.USAGE.get(env.USAGE.idFromName(await sha256(d.key)));
     const today = new Date().toISOString().slice(0, 10);
     await runInDurableObject(stub, (_, state) => state.storage.put("audio", { day: today, seconds: 3598, scribe: 3598 }));
+    // The counter answers in the background, so the stretch that crosses the hour still goes to Scribe.
+    expect(((await (await sendAudio(d, wav(5))).json()) as any).engine).toBe("scribe");
     const data = (await (await sendAudio(d, wav(5))).json()) as any;
     expect(data).toEqual({ text: "so the meeting is at four", language: "en", engine: "groq" });
     const form = speechCalls("groq")[0].body as FormData;
     expect(form.get("model")).toBe("whisper-large-v3");
-    expect(speechCalls("elevenlabs")).toHaveLength(0);
+    expect(speechCalls("elevenlabs")).toHaveLength(1);
   });
 
   it("refuses past the daily cap", async () => {
@@ -368,6 +370,7 @@ describe("/v1/transcribe", () => {
     const stub = env.USAGE.get(env.USAGE.idFromName(await sha256(d.key)));
     const today = new Date().toISOString().slice(0, 10);
     await runInDurableObject(stub, (_, state) => state.storage.put("audio", { day: today, seconds: 10798, scribe: 3600 }));
+    expect((await sendAudio(d, wav(5))).status).toBe(200);  // the one that slips past while it counts
     const response = await sendAudio(d, wav(5));
     expect(response.status).toBe(429);
     expect(await response.json()).toEqual({ error: "daily_limit" });
