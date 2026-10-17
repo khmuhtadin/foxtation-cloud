@@ -123,15 +123,15 @@ code { font-family: var(--mono); }
 .speech { flex: 1 1 440px; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
 .bubble { align-self: flex-start; min-height: 66px; background: var(--lilac); border-radius: 22px 22px 22px 6px; padding: 16px 20px; font-size: 20px; line-height: 1.6; font-weight: 500; }
 .word { display: inline-block; padding: 0 8px; border-radius: 8px; background: var(--cream); }
-.word.en { background: var(--periwinkle); color: var(--ink); }
+.word.second { background: var(--periwinkle); color: var(--ink); }
 .caret { display: inline-block; width: 2px; height: 22px; margin-left: 4px; background: var(--ink); vertical-align: -4px; }
 .langs { display: flex; flex-wrap: wrap; gap: 8px; font-size: 13px; font-weight: 600; }
 .lang { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; }
 .lang::before { content: ""; width: 8px; height: 8px; border-radius: 50%; }
-.lang.id { background: var(--cream); }
-.lang.id::before { background: #E0A800; }
-.lang.en { background: var(--lilac); }
-.lang.en::before { background: var(--periwinkle); }
+.lang.first { background: var(--cream); }
+.lang.first::before { background: #E0A800; }
+.lang.second { background: var(--lilac); }
+.lang.second::before { background: var(--periwinkle); }
 .lang-note { padding: 6px 12px; color: var(--muted); }
 .sticker { position: absolute; right: 24px; top: -36px; width: 104px; height: 104px; border-radius: 50%; background: var(--sun); display: flex; flex-direction: column; align-items: center; justify-content: center; transform: rotate(10deg); box-shadow: 0 10px 24px rgba(21, 26, 51, .12); }
 .sticker b { font-weight: 800; font-size: 30px; line-height: 1; letter-spacing: -0.03em; }
@@ -250,6 +250,7 @@ code { font-family: var(--mono); }
 @keyframes float { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(10px, -14px); } }
 /* Demo loop 6 s: fillers get struck, fade, the clean message arrives. */
 @keyframes strike { 0%, 12% { background-size: 0% 3px; opacity: 1; } 28% { background-size: 100% 3px; opacity: 1; } 40%, 85% { background-size: 100% 3px; opacity: .3; } 95%, 100% { background-size: 0% 3px; opacity: 1; } }
+@keyframes slide { to { transform: translateX(-50%); } }
 @keyframes sentIn { 0%, 40% { opacity: 0; transform: rotate(.8deg) translateY(16px); } 50%, 88% { opacity: 1; transform: rotate(.8deg) translateY(0); } 96%, 100% { opacity: 0; transform: rotate(.8deg) translateY(16px); } }
 @keyframes nudge { 0%, 36%, 100% { transform: translateY(0); } 42% { transform: translateY(6px); } 48% { transform: translateY(0); } }
 @keyframes tap { 0%, 60%, 100% { transform: rotate(-3deg) translateY(0); border-bottom-width: 6px; } 70%, 80% { transform: rotate(-3deg) translateY(4px); border-bottom-width: 2px; } }
@@ -312,10 +313,24 @@ code { font-family: var(--mono); }
 
 /* Languages */
 .section-sub { max-width: 640px; margin: 20px auto 0; text-align: center; font-size: 18px; line-height: 1.55; color: var(--muted); }
-.language-list { max-width: 880px; margin: 40px auto 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
-.language-list li { padding: 10px 18px; border-radius: 999px; background: var(--card); border: 1px solid var(--line); font-size: 17px; font-weight: 500; }
-.language-list li:nth-child(5n+2) { background: var(--lilac); border-color: transparent; }
-.language-list li:nth-child(7n+4) { background: var(--cream); border-color: transparent; }
+/* Three rows of language names, edge to edge. Each row holds its names four
+   times; sliding it by half moves exactly two sets, so the loop has no seam.
+   Without motion, only the first set shows, wrapped and centered. */
+.lang-rows { width: 100vw; margin: 44px 0 0 calc(50% - 50vw); display: flex; flex-direction: column; gap: 12px; overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); }
+.lang-row { display: flex; flex-wrap: wrap; justify-content: center; padding: 0 16px; }
+.lang-row span { flex: none; margin: 0 10px 10px 0; padding: 10px 18px; border-radius: 999px; background: var(--card); border: 1px solid var(--line); font-size: 17px; font-weight: 500; white-space: nowrap; }
+.lang-row .lilac { background: var(--lilac); border-color: transparent; }
+.lang-row .cream { background: var(--cream); border-color: transparent; }
+.lang-row .again { display: none; }
+@media (prefers-reduced-motion: no-preference) {
+  .lang-row { flex-wrap: nowrap; justify-content: flex-start; width: max-content; padding: 0; animation: slide 60s linear infinite; }
+  .lang-row.right { animation-direction: reverse; }
+  .lang-row:nth-child(2) { animation-duration: 70s; }
+  .lang-row span { margin-bottom: 0; }
+  .lang-row .again { display: block; }
+  .lang-rows:hover .lang-row { animation-play-state: paused; }
+}
 
 /* Pro plan: monthly and yearly price */
 .price-block { display: flex; flex-direction: column; gap: 8px; }
