@@ -225,14 +225,26 @@
         <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4A56E2" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>The raw transcript, as Whisper hears it</li>
         <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4A56E2" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>MIT licensed</li>
       </ul>
-      <a class="btn btn-outline btn-block" href="https://github.com/khmuhtadin/foxtation/releases/latest/download/Foxtation.dmg">Download free</a>
+      <div class="plan-foot">
+        <a class="btn btn-outline btn-block" href="https://github.com/khmuhtadin/foxtation/releases/latest/download/Foxtation.dmg">Download free</a>
+        <span class="billed">macOS 14+ on Apple silicon · no account needed</span>
+      </div>
     </div>
     <div class="plan pro">
       <span class="plan-sticker">nothing to download</span>
       <div class="plan-name"><b>Pro</b><p>Everything in Free, transcribed in the cloud.</p></div>
+      <fieldset class="billing">
+        <legend class="sr-only">Billing period</legend>
+        <input type="radio" name="billing" id="bill-month" value="month" checked>
+        <label for="bill-month">Monthly</label>
+        <input type="radio" name="billing" id="bill-year" value="year">
+        <label for="bill-year">Yearly <span class="save">−17%</span></label>
+      </fieldset>
       <div class="price-block">
-        <span class="price">$12<small>/month</small></span>
-        <span class="price-alt">or $120 a year, two months free</span>
+        <span class="price when-month">$12<small>/month</small></span>
+        <span class="price when-year">$120<small>/year</small></span>
+        <span class="price-alt when-month">Billed monthly, cancel anytime</span>
+        <span class="price-alt when-year">$10 a month, two months free</span>
       </div>
       <ul class="checks">
         <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#151A33" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Nothing to download: ElevenLabs Scribe transcribes in the cloud, with about half the errors of on-device</li>
@@ -242,8 +254,11 @@
         <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#151A33" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Up to 3 hours of dictation a day on up to 3&nbsp;Macs</li>
         <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#151A33" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Foxtation never stores your audio or text</li>
       </ul>
-      <a class="btn btn-dark btn-block" href="https://buy.polar.sh/polar_cl_pGAbwRd3v6HXPARELwKUmTJlleM9LQDteqWRq41Bn7C">Get Pro</a>
-      <span class="billed">Pick monthly or yearly at checkout · billed through Polar · cancel anytime · <a href="https://polar.sh/khaisa-studios/portal">Manage subscription</a></span>
+      <div class="plan-foot">
+        <a class="btn btn-sun btn-block when-month" href="https://buy.polar.sh/polar_cl_pGAbwRd3v6HXPARELwKUmTJlleM9LQDteqWRq41Bn7C?product_id=01e6c88b-589d-402a-af62-55172991410b">Get Pro monthly</a>
+        <a class="btn btn-sun btn-block when-year" href="https://buy.polar.sh/polar_cl_pGAbwRd3v6HXPARELwKUmTJlleM9LQDteqWRq41Bn7C?product_id=404d1d4f-ed69-4d03-8ba3-be800a315b79">Get Pro yearly</a>
+        <span class="billed">Billed through Polar · <a href="https://polar.sh/khaisa-studios/portal">Manage subscription</a></span>
+      </div>
     </div>
   </div>
 </section>
