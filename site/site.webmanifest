@@ -1,0 +1,21 @@
+{
+  "name": "Foxtation",
+  "short_name": "Foxtation",
+  "description": "Voice dictation for Mac in 23 languages.",
+  "start_url": "/",
+  "display": "browser",
+  "background_color": "#F5F7FF",
+  "theme_color": "#F5F7FF",
+  "icons": [
+    {
+      "src": "/assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

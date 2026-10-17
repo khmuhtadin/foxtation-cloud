@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy Policy · Foxtation</title>
+<meta name="description" content="What Foxtation does with your voice and data: the free app stays on your Mac, and Pro keeps nothing.">
+<meta name="theme-color" content="#F5F7FF">
+<link rel="canonical" href="https://foxtation.khaisa.studio/privacy">
+<link rel="icon" type="image/png" href="/assets/favicon.png">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Foxtation">
+<meta property="og:url" content="https://foxtation.khaisa.studio/privacy">
+<meta property="og:title" content="Privacy Policy · Foxtation">
+<meta property="og:description" content="What Foxtation does with your voice and data: the free app stays on your Mac, and Pro keeps nothing.">
+<meta property="og:image" content="https://foxtation.khaisa.studio/assets/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Foxtation: speak your language, or two in one sentence. Your Mac types it.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Privacy Policy · Foxtation">
+<meta name="twitter:description" content="What Foxtation does with your voice and data: the free app stays on your Mac, and Pro keeps nothing.">
+<meta name="twitter:image" content="https://foxtation.khaisa.studio/assets/og.png">
+<link rel="stylesheet" href="/assets/site.css">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebPage", "@id": "https://foxtation.khaisa.studio/privacy", "url": "https://foxtation.khaisa.studio/privacy", "name": "Privacy Policy · Foxtation", "description": "What Foxtation does with your voice and data: the free app stays on your Mac, and Pro keeps nothing.", "dateModified": "2026-10-17", "inLanguage": "en", "isPartOf": {"@id": "https://foxtation.khaisa.studio/#website"}, "publisher": {"@id": "https://foxtation.khaisa.studio/#organization"}, "breadcrumb": {"@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Foxtation", "item": "https://foxtation.khaisa.studio/"}, {"@type": "ListItem", "position": 2, "name": "Privacy Policy", "item": "https://foxtation.khaisa.studio/privacy"}]}}</script>
+</head>
+<body>
+
+<div class="nav-wrap">
+  <nav class="nav" aria-label="Main">
+    <a class="brand" href="/">
+      <img src="/assets/favicon.png" width="34" height="34" alt="">
+      <span>foxtation</span>
+    </a>
+    <div class="nav-links">
+      <a href="/#pro">Pro</a>
+      <a href="/support">Support</a>
+      <a class="nav-cta" href="https://github.com/khmuhtadin/foxtation/releases/latest/download/Foxtation.dmg">Download</a>
+    </div>
+  </nav>
+</div>
+
+<main class="doc">
+  <h1>Privacy Policy</h1>
+  <p class="updated">Last updated October 17, 2026</p>
+
+  <div class="summary">
+    <p><b>The short version.</b> The free app works entirely on your Mac and sends nothing anywhere. Foxtation Pro sends what it needs to transcribe and clean up a dictation, uses it for that dictation only, and keeps none of it. There are no ads, no analytics and no tracking on this website or in the app.</p>
+  </div>
+
+  <h2>Who we are</h2>
+  <p>Foxtation is made by Khaisa Studio, run by Khairul Muhtadin in Indonesia. When this policy says “we”, it means Khaisa Studio. Questions about your data go to <a href="mailto:hello@khaisa.studio">hello@khaisa.studio</a>.</p>
+
+  <h2>The free app</h2>
+  <p>With the on-device engines (WhisperKit, MLX or whisper.cpp), your voice is recorded to a temporary file, transcribed on your Mac and deleted. Your history, dictionary, snippets and settings are stored only on your Mac, in <code>~/Library/Application Support/Foxtation/</code>, for as long as you choose in Settings › Data &amp; Privacy. You can export or delete them there at any time.</p>
+  <p>The first time you set up an on-device engine, the app downloads the speech model from Hugging Face. That request comes from your Mac like any download, so Hugging Face sees your IP address. After that, the free app works offline.</p>
+
+  <h2>Foxtation Pro</h2>
+  <h3>Your license</h3>
+  <p>When you activate a license, the app sends your license key and your Mac's name (for example “MacBook Pro”) to Polar, our payment provider, which records this Mac as one of the license's devices. To check that a license is valid, our server asks Polar and remembers the answer for up to an hour.</p>
+
+  <h3>Cloud transcription</h3>
+  <p>With the Cloud engine, each stretch of your speech is sent from your Mac to our server while you talk, and from there to a speech-recognition provider that turns it into text. We don't store the audio. The provider processes it to return the text, under its own terms. To keep your voice on your Mac, pick WhisperKit in Settings › Engine.</p>
+
+  <h3>Cloud cleanup</h3>
+  <p>With cleanup on, the app sends the transcript to our server together with its language, the words in your dictionary, your snippet cues, the style for the app you're typing in, and, unless you turn off “Share the app name”, that app's name (for example “Slack”). Our server sends this to an AI language model provider, which returns the cleaned-up text. We don't store the transcript or the result.</p>
+
+  <h3>What our server keeps</h3>
+  <ul>
+    <li>A daily count of cleanups and seconds of transcription per license, to enforce the limits in the <a href="/terms">Terms</a>. It's stored under a one-way hash of your license key, not the key itself, and resets every day.</li>
+    <li>Short-lived cache entries: that a license was valid (one hour) and that a license reached today's limit (until the next day).</li>
+    <li>Error messages from our providers (for example “service unavailable”), without your audio or text, to keep the service running.</li>
+  </ul>
+  <p>Our server runs on Cloudflare, which, like any network, sees your IP address while handling a request.</p>
+
+  <h2>Payments</h2>
+  <p>Subscriptions are sold by Polar (polar.sh), which acts as the merchant of record. Polar and its card processor handle your name, email, billing address and payment details under <a href="https://polar.sh/legal/privacy">Polar's privacy policy</a>. We see your email, your subscription status and your license key so we can support you. We never see your card number.</p>
+
+  <h2>This website</h2>
+  <p>foxtation.khaisa.studio sets no cookies and runs no analytics or tracking scripts. Fonts and images are served from this site. Checkout and the subscription portal are on polar.sh.</p>
+
+  <h2>Who we share data with</h2>
+  <p>Only the services above, and only to provide Foxtation: Polar (licenses and payments), Cloudflare (hosting), a speech-recognition provider (Cloud engine) and an AI language model provider (cleanup). Each processes the data to deliver its part of the service. We don't sell your data and we don't use it to train models. Email us for the current list of providers.</p>
+
+  <h2>Your rights</h2>
+  <p>Depending on where you live, laws such as the GDPR and Indonesia's Personal Data Protection Law (UU PDP) give you the right to access, correct, delete or export your personal data, and to object to its processing. Most of your data never leaves your Mac and is yours to delete. For anything we or Polar hold, email <a href="mailto:hello@khaisa.studio">hello@khaisa.studio</a> and we'll answer within 30 days. You can also complain to your local data protection authority.</p>
+
+  <h2>Children</h2>
+  <p>Foxtation isn't directed at children under 13, and we don't knowingly collect their data.</p>
+
+  <h2>Changes</h2>
+  <p>If this policy changes, we'll update the date at the top. If a change affects how your data is used, we'll say so on this page and in the release notes before it takes effect.</p>
+
+</main>
+
+<footer class="footer footer-small">
+  <nav class="footer-links" aria-label="Footer">
+    <a href="/support">Support</a>
+    <a href="/privacy">Privacy</a>
+    <a href="/terms">Terms</a>
+    <a href="https://github.com/khmuhtadin/foxtation">GitHub</a>
+    <a href="https://github.com/khmuhtadin/foxtation/releases">Releases</a>
+    <a href="https://polar.sh/khaisa-studios/portal">Manage subscription</a>
+  </nav>
+  <p class="credit">Built by Khairul Muhtadin at Khaisa Studio, Indonesia · MIT licensed</p>
+</footer>
+</body>
+</html>

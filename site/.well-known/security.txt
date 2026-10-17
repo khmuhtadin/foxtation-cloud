@@ -1,0 +1,5 @@
+Contact: mailto:hello@khaisa.studio
+Expires: 2027-10-17T00:00:00.000Z
+Preferred-Languages: en, id
+Canonical: https://foxtation.khaisa.studio/.well-known/security.txt
+Policy: https://foxtation.khaisa.studio/privacy
